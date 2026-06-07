@@ -680,17 +680,6 @@
       </div>
       <button class="btn-reset" onclick="resetFilters()">🔄 รีเซ็ต</button>
     </div>
-    <hr class="filter-divider" />
-    <div class="filter-row">
-      <div class="filter-group">
-        <label>จากวันที่</label>
-        <input type="date" id="filterDateFrom" onchange="applyFilters()" />
-      </div>
-      <div class="filter-group">
-        <label>ถึงวันที่</label>
-        <input type="date" id="filterDateTo" onchange="applyFilters()" />
-      </div>
-    </div>
   </div>
 
   <div class="summary-grid">
@@ -730,6 +719,18 @@
     <div class="search-wrap">
       <input type="search" class="search-input" id="searchAll" placeholder="ค้นหาจากหมายเหตุ..." oninput="filterAll()" />
     </div>
+    <div class="recent-date-filter">
+      <div class="rdf-group">
+        <label>จากวันที่</label>
+        <input type="date" id="filterDateFrom" onchange="applyFilters()" />
+      </div>
+      <div class="rdf-group">
+        <label>ถึงวันที่</label>
+        <input type="date" id="filterDateTo" onchange="applyFilters()" />
+      </div>
+      <button class="btn-reset" onclick="clearDashDateFilter()">🔄 รีเซ็ต</button>
+    </div>
+    <div id="allListCount" style="font-size:.75rem;color:#64748b;margin-bottom:8px;display:none"></div>
     <div class="rec-list" id="allList">
       <div class="empty-state">กำลังโหลด...</div>
     </div>
@@ -1203,6 +1204,17 @@ function clearRecentFilter() {
   renderRecentList();
 }
 
+function clearDashDateFilter() {
+  const f = document.getElementById('filterDateFrom');
+  const t = document.getElementById('filterDateTo');
+  const s = document.getElementById('searchAll');
+  if (f) f.value = '';
+  if (t) t.value = '';
+  if (s) s.value = '';
+  highlightActiveFilters();
+  renderDashboard();
+}
+
 function renderRecentList() {
   const q        = (document.getElementById('searchRecent')?.value || '').toLowerCase().trim();
   const dateFrom = document.getElementById('recentDateFrom')?.value || '';
@@ -1518,7 +1530,19 @@ function renderPieChart(filtered) {
 }
 
 function renderAllTable(data, q = '') {
-  const el = document.getElementById('allList');
+  const el        = document.getElementById('allList');
+  const countEl   = document.getElementById('allListCount');
+  const hasDate   = !!(document.getElementById('filterDateFrom')?.value || document.getElementById('filterDateTo')?.value);
+
+  if (countEl) {
+    if (data.length > 0 && (hasDate || q)) {
+      countEl.style.display = 'block';
+      countEl.innerHTML = `พบ <strong>${data.length}</strong> รายการ`;
+    } else {
+      countEl.style.display = 'none';
+    }
+  }
+
   if (data.length === 0) {
     el.innerHTML = q
       ? `<div class="empty-state">ไม่พบหมายเหตุที่มีคำว่า "${q}"</div>`
