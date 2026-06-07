@@ -911,12 +911,18 @@ let editingSheetRow = null;
 // ═══════════════════════════════════════════════════
 //  CUSTOM ITEMS STORAGE (localStorage)
 // ═══════════════════════════════════════════════════
-const LS_CATS  = 'rrj_custom_cats';
-const LS_TYPES = 'rrj_custom_types';
-function getCustomCats()        { return JSON.parse(localStorage.getItem(LS_CATS)  || '[]'); }
-function getCustomTypes()       { return JSON.parse(localStorage.getItem(LS_TYPES) || '[]'); }
+const LS_CATS         = 'rrj_custom_cats';
+const LS_TYPES        = 'rrj_custom_types';
+const LS_HIDDEN_CATS  = 'rrj_hidden_cats';
+const LS_HIDDEN_TYPES = 'rrj_hidden_types';
+function getCustomCats()        { return JSON.parse(localStorage.getItem(LS_CATS)         || '[]'); }
+function getCustomTypes()       { return JSON.parse(localStorage.getItem(LS_TYPES)        || '[]'); }
 function saveCustomCats(arr)    { localStorage.setItem(LS_CATS,  JSON.stringify(arr)); }
 function saveCustomTypes(arr)   { localStorage.setItem(LS_TYPES, JSON.stringify(arr)); }
+function getHiddenCats()        { return JSON.parse(localStorage.getItem(LS_HIDDEN_CATS)  || '[]'); }
+function getHiddenTypes()       { return JSON.parse(localStorage.getItem(LS_HIDDEN_TYPES) || '[]'); }
+function saveHiddenCats(arr)    { localStorage.setItem(LS_HIDDEN_CATS,  JSON.stringify(arr)); }
+function saveHiddenTypes(arr)   { localStorage.setItem(LS_HIDDEN_TYPES, JSON.stringify(arr)); }
 
 const DEFAULT_TYPES = [
   { value: 'รายรับ',           label: 'รายรับ (Income) ↑' },
@@ -975,9 +981,10 @@ async function ensureHeader() {
 }
 
 function loadCategories() {
-  const sel  = document.getElementById('txCategory');
-  const prev = sel.value;
-  const cats = [...FALLBACK_CATS, ...getCustomCats()];
+  const sel    = document.getElementById('txCategory');
+  const prev   = sel.value;
+  const hidden = getHiddenCats();
+  const cats   = [...FALLBACK_CATS.filter(c => !hidden.includes(c)), ...getCustomCats()];
   sel.innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
   cats.forEach(c => {
     const o = document.createElement('option');
@@ -988,16 +995,17 @@ function loadCategories() {
 }
 
 function loadTypeOptions() {
-  const sel  = document.getElementById('txType');
-  const prev = sel.value;
+  const sel    = document.getElementById('txType');
+  const prev   = sel.value;
+  const hidden = getHiddenTypes();
   sel.innerHTML = '';
-  [...DEFAULT_TYPES, ...getCustomTypes().map(t => ({ value: t, label: t }))].forEach(t => {
+  [...DEFAULT_TYPES.filter(t => !hidden.includes(t.value)), ...getCustomTypes().map(t => ({ value: t, label: t }))].forEach(t => {
     const o = document.createElement('option');
     o.value = t.value; o.textContent = t.label;
     sel.appendChild(o);
   });
   sel.value = prev || 'รายจ่าย (Debit)';
-  if (!sel.value) sel.value = 'รายจ่าย (Debit)';
+  if (!sel.value) sel.value = sel.options[0]?.value || '';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1181,11 +1189,12 @@ function populateYearFilter(data) {
 }
 
 function populateCategoryFilter() {
-  const sel  = document.getElementById('filterCategory');
+  const sel    = document.getElementById('filterCategory');
   if (!sel) return;
-  const prev = sel.value;
+  const prev   = sel.value;
+  const hidden = getHiddenCats();
   sel.innerHTML = '<option value="">ทุกหมวดหมู่</option>';
-  [...FALLBACK_CATS, ...getCustomCats()].forEach(c => {
+  [...FALLBACK_CATS.filter(c => !hidden.includes(c)), ...getCustomCats()].forEach(c => {
     const o = document.createElement('option');
     o.value = c; o.textContent = c;
     sel.appendChild(o);
@@ -1194,11 +1203,12 @@ function populateCategoryFilter() {
 }
 
 function populateTypeFilter() {
-  const sel = document.getElementById('filterType');
+  const sel    = document.getElementById('filterType');
   if (!sel) return;
-  const prev = sel.value;
+  const prev   = sel.value;
+  const hidden = getHiddenTypes();
   sel.innerHTML = '<option value="">ทุกประเภท</option>';
-  [...DEFAULT_TYPES, ...getCustomTypes().map(t => ({ value: t, label: t }))].forEach(t => {
+  [...DEFAULT_TYPES.filter(t => !hidden.includes(t.value)), ...getCustomTypes().map(t => ({ value: t, label: t }))].forEach(t => {
     const o = document.createElement('option');
     o.value = t.value; o.textContent = t.label;
     sel.appendChild(o);
@@ -1479,27 +1489,41 @@ function closeMgmt() {
 }
 
 function renderMgmtList() {
-  const el    = document.getElementById('mgmtList');
-  const isCat = _mgmtMode === 'cat';
-  const defaults = isCat
-    ? FALLBACK_CATS.map(c => ({ label: c }))
-    : DEFAULT_TYPES.map(t => ({ label: t.label }));
+  const el      = document.getElementById('mgmtList');
+  const isCat   = _mgmtMode === 'cat';
+  const hidden  = isCat ? getHiddenCats() : getHiddenTypes();
   const customs = isCat ? getCustomCats() : getCustomTypes();
 
-  el.innerHTML =
-    defaults.map(d =>
-      `<div class="mgmt-item mgmt-item-default">
-        <span>${d.label}</span>
+  const visibleDefaults = isCat
+    ? FALLBACK_CATS.filter(c => !hidden.includes(c)).map(c => ({ value: c, label: c }))
+    : DEFAULT_TYPES.filter(t => !hidden.includes(t.value));
+
+  const defaultsHtml = visibleDefaults.map(d =>
+    `<div class="mgmt-item mgmt-item-default">
+      <span>${d.label}</span>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
         <span class="mgmt-default-badge">ค่าเริ่มต้น</span>
-      </div>`
-    ).join('') +
-    customs.map((c, i) =>
-      `<div class="mgmt-item">
-        <span>${c}</span>
-        <button class="mgmt-del-btn" onclick="mgmtDeleteItem(${i})" title="ลบ">✕</button>
-      </div>`
-    ).join('') +
-    (customs.length === 0 ? `<div style="text-align:center;color:#94a3b8;font-size:.82rem;padding:10px 0">ยังไม่มีรายการที่กำหนดเอง</div>` : '');
+        <button class="mgmt-del-btn" onclick="mgmtDeleteDefault('${d.value.replace(/'/g,"\\'")}')">✕</button>
+      </div>
+    </div>`
+  ).join('');
+
+  const customsHtml = customs.map((c, i) =>
+    `<div class="mgmt-item">
+      <span>${c}</span>
+      <button class="mgmt-del-btn" onclick="mgmtDeleteItem(${i})">✕</button>
+    </div>`
+  ).join('');
+
+  const emptyHtml = (visibleDefaults.length === 0 && customs.length === 0)
+    ? `<div style="text-align:center;color:#94a3b8;font-size:.82rem;padding:10px 0">ไม่มีรายการที่แสดง</div>`
+    : '';
+
+  const restoreHtml = hidden.length > 0
+    ? `<button onclick="mgmtRestoreDefaults()" style="width:100%;margin-top:8px;padding:7px 10px;background:#f0fdf4;border:1.5px dashed #86efac;border-radius:8px;color:#16a34a;font-size:.8rem;font-weight:700;cursor:pointer">↺ กู้คืนค่าเริ่มต้น (${hidden.length} รายการ)</button>`
+    : '';
+
+  el.innerHTML = defaultsHtml + customsHtml + emptyHtml + restoreHtml;
 }
 
 function mgmtAddItem() {
@@ -1551,6 +1575,38 @@ function mgmtDeleteItem(index) {
   }
   renderMgmtList();
   showToast('ลบแล้ว', 'info');
+}
+
+function mgmtDeleteDefault(value) {
+  if (_mgmtMode === 'cat') {
+    const arr = getHiddenCats();
+    if (!arr.includes(value)) arr.push(value);
+    saveHiddenCats(arr);
+    loadCategories();
+    populateCategoryFilter();
+  } else {
+    const arr = getHiddenTypes();
+    if (!arr.includes(value)) arr.push(value);
+    saveHiddenTypes(arr);
+    loadTypeOptions();
+    populateTypeFilter();
+  }
+  renderMgmtList();
+  showToast('ซ่อนแล้ว', 'info');
+}
+
+function mgmtRestoreDefaults() {
+  if (_mgmtMode === 'cat') {
+    saveHiddenCats([]);
+    loadCategories();
+    populateCategoryFilter();
+  } else {
+    saveHiddenTypes([]);
+    loadTypeOptions();
+    populateTypeFilter();
+  }
+  renderMgmtList();
+  showToast('↺ กู้คืนสำเร็จ', 'success');
 }
 
 // ═══════════════════════════════════════════════════
