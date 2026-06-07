@@ -251,6 +251,35 @@
     }
     .filter-group select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
     .filter-group select.active-filter { border-color: #4f46e5; background: #eef2ff; color: #4338ca; font-weight: 600; }
+    .filter-group input[type="date"] {
+      padding: 8px 10px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: .88rem;
+      color: #1e293b;
+      background: #fff;
+      min-height: 40px;
+      width: 100%;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .filter-group input[type="date"]:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+    .filter-group input[type="date"].active-filter { border-color: #4f46e5; background: #eef2ff; color: #4338ca; font-weight: 600; }
+    .filter-divider { border: none; border-top: 1px dashed #e2e8f0; margin: 10px 0 4px; }
+
+    /* ── RECENT DATE FILTER ── */
+    .recent-date-filter {
+      display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .rdf-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
+    .rdf-group label { font-size: .68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .05em; }
+    .rdf-group input[type="date"] {
+      padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: .85rem; color: #1e293b; background: #f8fafc; min-height: 38px;
+      width: 100%; transition: border-color .2s, box-shadow .2s;
+    }
+    .rdf-group input[type="date"]:focus { outline: none; border-color: #4f46e5; background: #fff; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+    .rdf-group input[type="date"].active-filter { border-color: #4f46e5; background: #eef2ff; }
     .btn-reset {
       padding: 8px 14px;
       border: 1.5px solid #e2e8f0;
@@ -578,6 +607,17 @@
     <div class="search-wrap">
       <input type="search" class="search-input" id="searchRecent" placeholder="ค้นหาจากหมายเหตุ..." oninput="filterRecent()" />
     </div>
+    <div class="recent-date-filter">
+      <div class="rdf-group">
+        <label>จากวันที่</label>
+        <input type="date" id="recentDateFrom" onchange="filterRecent()" />
+      </div>
+      <div class="rdf-group">
+        <label>ถึงวันที่</label>
+        <input type="date" id="recentDateTo" onchange="filterRecent()" />
+      </div>
+      <button class="btn-reset" onclick="clearRecentFilter()">🔄 รีเซ็ต</button>
+    </div>
     <div class="rec-list" id="recentList">
       <div class="empty-state">กำลังโหลด...</div>
     </div>
@@ -639,6 +679,17 @@
         </select>
       </div>
       <button class="btn-reset" onclick="resetFilters()">🔄 รีเซ็ต</button>
+    </div>
+    <hr class="filter-divider" />
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>จากวันที่</label>
+        <input type="date" id="filterDateFrom" onchange="applyFilters()" />
+      </div>
+      <div class="filter-group">
+        <label>ถึงวันที่</label>
+        <input type="date" id="filterDateTo" onchange="applyFilters()" />
+      </div>
     </div>
   </div>
 
@@ -1142,20 +1193,58 @@ async function loadRecentEntries(force = false) {
 
 function filterRecent() { renderRecentList(); }
 
+function clearRecentFilter() {
+  const f = document.getElementById('recentDateFrom');
+  const t = document.getElementById('recentDateTo');
+  const s = document.getElementById('searchRecent');
+  if (f) f.value = '';
+  if (t) t.value = '';
+  if (s) s.value = '';
+  renderRecentList();
+}
+
 function renderRecentList() {
-  const q  = (document.getElementById('searchRecent')?.value || '').toLowerCase().trim();
-  const el = document.getElementById('recentList');
+  const q        = (document.getElementById('searchRecent')?.value || '').toLowerCase().trim();
+  const dateFrom = document.getElementById('recentDateFrom')?.value || '';
+  const dateTo   = document.getElementById('recentDateTo')?.value   || '';
+  const el       = document.getElementById('recentList');
+
   if (cachedData.length === 0) {
     el.innerHTML = '<div class="empty-state">ยังไม่มีรายการ — เริ่มบันทึกรายการแรกได้เลย!</div>';
     return;
   }
-  let rows = [...cachedData].sort((a, b) => (parseDate(b[0])||0) - (parseDate(a[0])||0)).slice(0, 15);
+
+  const hasDateFilter = dateFrom || dateTo;
+  const fromDate = dateFrom ? new Date(dateFrom + 'T00:00:00') : null;
+  const toDate   = dateTo   ? new Date(dateTo   + 'T23:59:59') : null;
+
+  let rows = [...cachedData].sort((a, b) => (parseDate(b[0])||0) - (parseDate(a[0])||0));
+
+  if (hasDateFilter) {
+    rows = rows.filter(r => {
+      const d = parseDate(r[0]);
+      if (!d) return false;
+      if (fromDate && d < fromDate) return false;
+      if (toDate   && d > toDate)   return false;
+      return true;
+    });
+  } else {
+    rows = rows.slice(0, 15);
+  }
+
   if (q) rows = rows.filter(r => (r[4]||'').toLowerCase().includes(q));
+
   if (rows.length === 0) {
-    el.innerHTML = `<div class="empty-state">ไม่พบหมายเหตุที่มีคำว่า "${q}"</div>`;
+    el.innerHTML = hasDateFilter
+      ? `<div class="empty-state">ไม่พบรายการในช่วงวันที่ที่เลือก</div>`
+      : `<div class="empty-state">ไม่พบหมายเหตุที่มีคำว่า "${q}"</div>`;
     return;
   }
-  el.innerHTML = rows.map(r => rowHtml(r, true)).join('');
+
+  const countLabel = hasDateFilter
+    ? `<div style="font-size:.75rem;color:#64748b;margin-bottom:8px">พบ <strong>${rows.length}</strong> รายการ</div>`
+    : '';
+  el.innerHTML = countLabel + rows.map(r => rowHtml(r, true)).join('');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1169,6 +1258,8 @@ function getFilters() {
     month:    document.getElementById('filterMonth')?.value    || '',
     type:     document.getElementById('filterType')?.value     || '',
     category: document.getElementById('filterCategory')?.value || '',
+    dateFrom: document.getElementById('filterDateFrom')?.value || '',
+    dateTo:   document.getElementById('filterDateTo')?.value   || '',
   };
 }
 
@@ -1217,8 +1308,7 @@ function populateTypeFilter() {
 }
 
 function highlightActiveFilters() {
-  const f = getFilters();
-  ['filterYear','filterMonth','filterType','filterCategory'].forEach(id => {
+  ['filterYear','filterMonth','filterType','filterCategory','filterDateFrom','filterDateTo'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('active-filter', !!el.value);
   });
@@ -1235,6 +1325,8 @@ function resetFilters() {
   document.getElementById('filterMonth').value    = '';
   document.getElementById('filterType').value     = '';
   document.getElementById('filterCategory').value = '';
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value   = '';
   document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
   document.querySelector('.p-pill[data-period="all"]').classList.add('active');
   highlightActiveFilters();
@@ -1261,6 +1353,8 @@ function setPeriod(btn) {
   }
   document.getElementById('filterType').value     = '';
   document.getElementById('filterCategory').value = '';
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value   = '';
   highlightActiveFilters();
   renderDashboard();
 }
@@ -1285,6 +1379,9 @@ function renderDashboard() {
   const f    = getFilters();
   const q    = (document.getElementById('searchAll')?.value || '').toLowerCase().trim();
 
+  const fromDate = f.dateFrom ? new Date(f.dateFrom + 'T00:00:00') : null;
+  const toDate   = f.dateTo   ? new Date(f.dateTo   + 'T23:59:59') : null;
+
   let filtered = data.filter(r => {
     const d = parseDate(r[0]);
     if (!d || isNaN(d)) return false;
@@ -1292,6 +1389,8 @@ function renderDashboard() {
     if (f.month    && d.getMonth() + 1 !== parseInt(f.month)) return false;
     if (f.type     && r[1] !== f.type)     return false;
     if (f.category && r[2] !== f.category) return false;
+    if (fromDate   && d < fromDate) return false;
+    if (toDate     && d > toDate)   return false;
     return true;
   });
 
