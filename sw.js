@@ -1,4 +1,4 @@
-const CACHE = 'rrj-v1';
+const CACHE = 'flt-v1';
 const SHELL = ['./index.html', './icon.svg', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -19,9 +19,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // Never cache Google API calls — always go to network
   if (url.hostname.includes('googleapis.com') || url.hostname.includes('google.com')) return;
-
   e.respondWith(
     caches.match(e.request).then(hit => {
       if (hit) return hit;

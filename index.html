@@ -3,535 +3,213 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta name="theme-color" content="#16a34a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="รายรับ-รายจ่าย" />
+  <meta name="apple-mobile-web-app-title" content="Fat Loss Tracker" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon.svg" />
-  <title>บันทึกรายรับ-รายจ่าย</title>
+  <title>Fat Loss Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, 'TH Sarabun New', sans-serif; background: #f0fdf4; min-height: 100vh; color: #1e293b; }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, 'TH Sarabun New', sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-      color: #1e293b;
-    }
-
-    /* ── HEADER ── */
+    /* HEADER */
     .header {
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-      color: #fff;
-      padding: 14px 20px;
+      background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+      color: #fff; padding: 14px 20px;
       padding-top: calc(14px + env(safe-area-inset-top));
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 12px rgba(79,70,229,.35);
-      position: sticky;
-      top: 0;
-      z-index: 110;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 12px rgba(22,163,74,.35);
+      position: sticky; top: 0; z-index: 110;
     }
-    .header h1 { font-size: 1.15rem; font-weight: 700; }
-    .conn-badge {
-      font-size: .72rem;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-weight: 600;
-    }
-    .conn-badge.ok      { background: rgba(16,185,129,.25); color: #6ee7b7; }
-    .conn-badge.err     { background: rgba(239,68,68,.25);  color: #fca5a5; }
+    .header-left { display: flex; flex-direction: column; }
+    .header h1 { font-size: 1.08rem; font-weight: 700; }
+    .header-sub { font-size: .7rem; opacity: .85; margin-top: 1px; }
+    .header-right { display: flex; gap: 8px; align-items: center; }
+    .settings-btn { background: rgba(255,255,255,.2); border: none; color: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .85rem; }
+    .conn-badge { font-size: .7rem; padding: 4px 9px; border-radius: 999px; font-weight: 600; }
+    .conn-badge.ok      { background: rgba(255,255,255,.25); color: #fff; }
+    .conn-badge.err     { background: rgba(239,68,68,.35); color: #fca5a5; }
     .conn-badge.loading { background: rgba(255,255,255,.15); color: rgba(255,255,255,.7); }
 
-    /* ── TOP NAV (desktop) ── */
-    .top-nav {
-      background: #fff;
-      display: flex;
-      border-bottom: 2px solid #e2e8f0;
-      position: sticky;
-      top: 52px;
-      z-index: 100;
-    }
-    .nav-btn {
-      padding: 13px 28px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-size: .95rem;
-      color: #64748b;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-      font-weight: 500;
-      transition: all .2s;
-    }
-    .nav-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
-    .nav-btn:hover:not(.active) { color: #1e293b; background: #f8fafc; }
+    /* TOP NAV */
+    .top-nav { background: #fff; display: flex; border-bottom: 2px solid #e2e8f0; position: sticky; top: 56px; z-index: 100; }
+    .nav-btn { padding: 12px 18px; border: none; background: none; cursor: pointer; font-size: .88rem; color: #64748b; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 500; transition: all .2s; white-space: nowrap; }
+    .nav-btn.active { color: #16a34a; border-bottom-color: #16a34a; }
+    .nav-btn:hover:not(.active) { color: #1e293b; background: #f0fdf4; }
 
-    /* ── BOTTOM NAV (mobile) ── */
-    .bottom-nav {
-      display: none;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: #fff;
-      border-top: 1px solid #e2e8f0;
-      z-index: 200;
-      padding-bottom: env(safe-area-inset-bottom);
-      box-shadow: 0 -2px 12px rgba(0,0,0,.08);
-    }
+    /* BOTTOM NAV */
+    .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e2e8f0; z-index: 200; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -2px 12px rgba(0,0,0,.08); }
     .bottom-nav-inner { display: flex; }
-    .bnav-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 4px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: #94a3b8;
-      gap: 2px;
-      font-weight: 600;
-      font-size: .65rem;
-      transition: color .2s;
-      min-height: 58px;
-    }
-    .bnav-icon { font-size: 1.35rem; line-height: 1; }
-    .bnav-btn.active { color: #4f46e5; }
+    .bnav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; border: none; background: none; cursor: pointer; color: #94a3b8; gap: 2px; font-weight: 600; font-size: .6rem; transition: color .2s; min-height: 58px; }
+    .bnav-icon { font-size: 1.25rem; line-height: 1; }
+    .bnav-btn.active { color: #16a34a; }
 
-    /* ── PAGES ── */
+    /* PAGES */
     .page { display: none; padding: 16px; max-width: 960px; margin: 0 auto; }
     .page.active { display: block; }
 
-    /* ── CARD ── */
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 1px 6px rgba(0,0,0,.07);
-      margin-bottom: 14px;
-    }
-    .card-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+    /* CARD */
+    .card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 6px rgba(0,0,0,.07); margin-bottom: 14px; }
+    .card-title { font-size: .95rem; font-weight: 700; color: #0f172a; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
-    /* ── FORM ── */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    /* WORKOUT BANNER */
+    .workout-banner { color: #fff; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+    .wb-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .wb-title { font-size: 1.02rem; font-weight: 700; }
+    .wb-sub { font-size: .73rem; opacity: .85; margin-top: 2px; }
+    .wb-phase { background: rgba(255,255,255,.22); border-radius: 999px; padding: 3px 10px; font-size: .7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .ex-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .ex-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,.13); border-radius: 8px; padding: 7px 11px; font-size: .83rem; }
+    .ex-name { font-weight: 600; }
+    .ex-target { opacity: .9; font-size: .78rem; }
+    .wb-cardio { background: rgba(255,255,255,.15); border-radius: 8px; padding: 8px 11px; font-size: .79rem; }
+    .wb-rest-msg { text-align: center; font-size: .95rem; opacity: .9; padding: 8px 0; }
+
+    /* WEEK STRIP */
+    .week-strip { display: flex; gap: 4px; margin-bottom: 14px; }
+    .ws-day { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 7px 3px; border-radius: 10px; background: #f1f5f9; gap: 3px; }
+    .ws-day.today  { background: #16a34a; color: #fff; }
+    .ws-day.logged { background: #dcfce7; border: 1.5px solid #86efac; }
+    .ws-day.missed { background: #fee2e2; border: 1.5px solid #fca5a5; }
+    .ws-day.resting { background: #f8fafc; opacity: .55; }
+    .ws-lbl  { font-size: .58rem; font-weight: 700; text-transform: uppercase; }
+    .ws-icon { font-size: .88rem; line-height: 1; }
+    .ws-type { font-size: .52rem; opacity: .75; text-align: center; }
+    .ws-day.today .ws-type { opacity: .9; }
+
+    /* FORM */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group.span2 { grid-column: span 2; }
-    label {
-      font-size: .75rem;
-      font-weight: 700;
-      color: #475569;
-      text-transform: uppercase;
-      letter-spacing: .05em;
+    label { font-size: .7rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .05em; }
+    input[type="text"], input[type="number"], input[type="date"], select {
+      padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: .93rem; color: #1e293b; background: #fff; width: 100%;
+      transition: border-color .2s, box-shadow .2s; min-height: 46px;
     }
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    select {
-      padding: 12px 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 1rem;
-      color: #1e293b;
-      background: #fff;
-      width: 100%;
-      transition: border-color .2s, box-shadow .2s;
-      min-height: 50px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
-    }
+    input:focus, select:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+    .unit-wrap { position: relative; }
+    .unit-wrap input { padding-right: 44px; }
+    .unit-lbl { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: .78rem; color: #94a3b8; font-weight: 600; pointer-events: none; }
 
-    /* ── BUTTONS ── */
-    .btn-primary {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      color: #fff;
-      border: none;
-      padding: 15px 28px;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 12px;
-      transition: opacity .2s, transform .1s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 52px;
-    }
+    /* SECTION SEP */
+    .sec-sep { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin: 14px 0 10px; display: flex; align-items: center; gap: 8px; }
+    .sec-sep::before, .sec-sep::after { content: ''; flex: 1; border-top: 1px solid #e2e8f0; }
+
+    /* BUTTONS */
+    .btn-primary { background: linear-gradient(135deg,#16a34a,#059669); color: #fff; border: none; padding: 13px 24px; border-radius: 10px; font-size: .93rem; font-weight: 700; cursor: pointer; width: 100%; margin-top: 12px; transition: opacity .2s, transform .1s; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; }
     .btn-primary:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-cancel {
-      background: #f1f5f9;
-      color: #475569;
-      border: 1.5px solid #e2e8f0;
-      padding: 13px 28px;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 8px;
-      transition: background .2s;
-      min-height: 50px;
-    }
+    .btn-cancel { background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0; padding: 11px 20px; border-radius: 10px; font-size: .88rem; font-weight: 700; cursor: pointer; flex: 1; min-height: 44px; transition: background .2s; }
     .btn-cancel:hover { background: #e2e8f0; }
-
-    /* ── SUMMARY CARDS ── */
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
-    .s-card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 16px 14px;
-      box-shadow: 0 1px 6px rgba(0,0,0,.07);
-      text-align: center;
-    }
-    .s-card .s-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 5px; }
-    .s-card .s-amount { font-size: 1.35rem; font-weight: 800; }
-    .s-card .s-sub { font-size: .7rem; color: #94a3b8; margin-top: 4px; }
-    .s-card.inc .s-amount { color: #10b981; }
-    .s-card.exp .s-amount { color: #ef4444; }
-    .s-card.bal .s-amount { color: #4f46e5; }
-
-    /* ── CHARTS ── */
-    .charts-grid { display: grid; grid-template-columns: 3fr 1.4fr; gap: 14px; margin-bottom: 14px; }
-    .chart-box { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
-    .chart-box .chart-title { font-size: .73rem; font-weight: 700; color: #374151; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .06em; }
-
-    /* ── PERIOD PILLS ── */
-    .period-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .period-row h2 { font-size: 1rem; font-weight: 700; }
-    .period-pills { display: flex; gap: 6px; }
-    .p-pill {
-      padding: 6px 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 999px;
-      background: #fff;
-      cursor: pointer;
-      font-size: .8rem;
-      font-weight: 600;
-      color: #64748b;
-      transition: all .2s;
-      min-height: 36px;
-    }
-    .p-pill.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
-
-    /* ── DASHBOARD FILTERS ── */
-    .filter-card { padding: 14px 16px; margin-bottom: 14px; }
-    .filter-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
-    .filter-group label { font-size: .68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .05em; }
-    .filter-group select {
-      padding: 8px 10px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: .88rem;
-      color: #1e293b;
-      background: #fff;
-      min-height: 40px;
-      width: 100%;
-      cursor: pointer;
-    }
-    .filter-group select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-    .filter-group select.active-filter { border-color: #4f46e5; background: #eef2ff; color: #4338ca; font-weight: 600; }
-    .filter-group input[type="date"] {
-      padding: 8px 10px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: .88rem;
-      color: #1e293b;
-      background: #fff;
-      min-height: 40px;
-      width: 100%;
-      cursor: pointer;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .filter-group input[type="date"]:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-    .filter-group input[type="date"].active-filter { border-color: #4f46e5; background: #eef2ff; color: #4338ca; font-weight: 600; }
-    .filter-divider { border: none; border-top: 1px dashed #e2e8f0; margin: 10px 0 4px; }
-
-    /* ── RECENT DATE FILTER ── */
-    .recent-date-filter {
-      display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; flex-wrap: wrap;
-    }
-    .rdf-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
-    .rdf-group label { font-size: .68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .05em; }
-    .rdf-group input[type="date"] {
-      padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 8px;
-      font-size: .85rem; color: #1e293b; background: #f8fafc; min-height: 38px;
-      width: 100%; transition: border-color .2s, box-shadow .2s;
-    }
-    .rdf-group input[type="date"]:focus { outline: none; border-color: #4f46e5; background: #fff; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-    .rdf-group input[type="date"].active-filter { border-color: #4f46e5; background: #eef2ff; }
-    .btn-reset {
-      padding: 8px 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      background: #f1f5f9;
-      color: #64748b;
-      font-size: .82rem;
-      font-weight: 700;
-      cursor: pointer;
-      min-height: 40px;
-      white-space: nowrap;
-      align-self: flex-end;
-      transition: background .2s;
-    }
-    .btn-reset:hover { background: #e2e8f0; }
-
-    /* ── RECORD CARDS ── */
-    .rec-list { display: flex; flex-direction: column; gap: 10px; }
-    .rec-card {
-      background: #f8fafc;
-      border-radius: 12px;
-      padding: 13px 15px;
-      border-left: 4px solid transparent;
-      border: 1px solid #f1f5f9;
-      border-left-width: 4px;
-    }
-    .rec-card.is-inc { border-left-color: #10b981; }
-    .rec-card.is-exp { border-left-color: #ef4444; }
-    .rec-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 7px;
-    }
-    .rec-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .rec-cat { font-size: .9rem; font-weight: 600; color: #1e293b; }
-    .rec-amount { font-size: 1.05rem; font-weight: 800; flex-shrink: 0; }
-    .rec-bottom {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .rec-date { font-size: .75rem; color: #94a3b8; white-space: nowrap; }
-    .rec-note { font-size: .78rem; color: #64748b; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .rec-btns { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
-
-    /* ── BADGE ── */
-    .badge {
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: .7rem;
-      font-weight: 700;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .badge.inc { background: #dcfce7; color: #16a34a; }
-    .badge.exp { background: #fee2e2; color: #dc2626; }
-
-    /* ── ACTION BUTTONS ── */
-    .act-btn {
-      padding: 6px 12px;
-      border-radius: 7px;
-      border: none;
-      cursor: pointer;
-      font-size: .75rem;
-      font-weight: 700;
-      transition: opacity .15s;
-      min-height: 34px;
-    }
-    .act-btn:hover { opacity: .8; }
-    .act-btn.edit { background: #e0e7ff; color: #4338ca; }
-    .act-btn.del  { background: #fee2e2; color: #dc2626; }
-    .act-btn.dup  { background: #f0fdfa; color: #0d9488; }
-
-    /* ── MANAGE BUTTON ── */
-    .label-row { display: flex; align-items: center; justify-content: space-between; }
-    .manage-btn {
-      background: none; border: none; cursor: pointer;
-      font-size: .68rem; color: #94a3b8; padding: 2px 7px;
-      border-radius: 5px; font-weight: 700; letter-spacing: .02em;
-      transition: color .15s, background .15s;
-    }
-    .manage-btn:hover { color: #4f46e5; background: #eef2ff; }
-
-    /* ── MANAGEMENT MODAL ── */
-    .mgmt-list { max-height: 240px; overflow-y: auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
-    .mgmt-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 11px; border-radius: 8px;
-      background: #f8fafc; font-size: .88rem; color: #1e293b;
-    }
-    .mgmt-item-default { opacity: .6; }
-    .mgmt-default-badge {
-      font-size: .62rem; font-weight: 700; color: #94a3b8;
-      background: #e2e8f0; padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
-    }
-    .mgmt-del-btn {
-      background: none; border: none; cursor: pointer;
-      color: #dc2626; font-size: .85rem; padding: 2px 7px;
-      border-radius: 5px; flex-shrink: 0; transition: background .15s;
-    }
-    .mgmt-del-btn:hover { background: #fee2e2; }
-    .mgmt-add-row { display: flex; gap: 8px; }
-    .mgmt-input {
-      flex: 1; padding: 9px 12px; border: 1.5px solid #e2e8f0;
-      border-radius: 8px; font-size: .9rem; color: #1e293b; min-height: 42px;
-    }
-    .mgmt-input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-    .mgmt-add-btn {
-      padding: 9px 16px; background: #4f46e5; color: #fff;
-      border: none; border-radius: 8px; font-weight: 700;
-      cursor: pointer; font-size: .88rem; white-space: nowrap;
-      min-height: 42px; transition: opacity .15s;
-    }
-    .mgmt-add-btn:hover { opacity: .85; }
-    .mgmt-hint {
-      font-size: .75rem; color: #92400e; margin-top: 10px;
-      padding: 8px 12px; background: #fef9c3; border-radius: 7px; line-height: 1.5;
-    }
-    .mgmt-hint:empty { display: none; }
-
-    /* ── SEARCH BAR ── */
-    .search-wrap { position: relative; margin-bottom: 12px; }
-    .search-wrap::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .8rem; pointer-events: none; }
-    .search-input {
-      width: 100%;
-      padding: 9px 14px 9px 36px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 9px;
-      font-size: .9rem;
-      color: #1e293b;
-      background: #f8fafc;
-      min-height: 42px;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .search-input:focus { outline: none; border-color: #4f46e5; background: #fff; box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-
-    /* ── DUPLICATE MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 600;
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px;
-      opacity: 0; pointer-events: none;
-      transition: opacity .25s;
-    }
-    .modal-overlay.show { opacity: 1; pointer-events: all; }
-    .modal-box {
-      background: #fff; border-radius: 16px; padding: 24px;
-      width: 100%; max-width: 360px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.2);
-      transform: scale(.95); transition: transform .25s;
-    }
-    .modal-overlay.show .modal-box { transform: scale(1); }
-    .modal-title { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
-    .modal-info {
-      font-size: .82rem; color: #475569;
-      background: #f8fafc; border-radius: 8px;
-      padding: 10px 12px; margin-bottom: 14px; line-height: 1.6;
-    }
-    .modal-info strong { color: #1e293b; }
-    .modal-label { font-size: .75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; display: block; }
-    .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
-    .modal-btns .btn-cancel  { margin-top: 0; flex: 1; }
-    .modal-btns .btn-primary { margin-top: 0; flex: 2; }
-
-    /* ── MISC ── */
-    .refresh-link { background: none; border: none; color: #4f46e5; cursor: pointer; font-size: .82rem; font-weight: 600; padding: 4px 8px; }
+    .refresh-link { background: none; border: none; color: #16a34a; cursor: pointer; font-size: .78rem; font-weight: 600; padding: 3px 7px; }
     .refresh-link:hover { text-decoration: underline; }
-    .empty-state { text-align: center; padding: 32px; color: #94a3b8; font-size: .9rem; }
 
-    /* ── EDIT BANNER ── */
-    .edit-banner {
-      display: none;
-      background: #fef3c7;
-      border: 1.5px solid #fde68a;
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-bottom: 14px;
-      font-size: .85rem;
-      color: #92400e;
-      font-weight: 600;
-      align-items: center;
-      gap: 10px;
-    }
-    .edit-banner.show { display: flex; }
-    .edit-banner span { flex: 1; }
+    /* STAT CARDS */
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 13px 10px; box-shadow: 0 1px 6px rgba(0,0,0,.07); text-align: center; }
+    .stat-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 4px; }
+    .stat-value { font-size: 1.25rem; font-weight: 800; color: #0f172a; }
+    .stat-diff { font-size: .68rem; margin-top: 3px; }
+    .stat-diff.good    { color: #16a34a; }
+    .stat-diff.bad     { color: #dc2626; }
+    .stat-diff.neutral { color: #64748b; }
 
-    /* ── TOAST ── */
-    .toast {
-      position: fixed;
-      bottom: calc(28px + env(safe-area-inset-bottom));
-      right: 20px;
-      padding: 13px 18px;
-      border-radius: 10px;
-      color: #fff;
-      font-weight: 600;
-      font-size: .9rem;
-      z-index: 9999;
-      transform: translateY(80px);
-      opacity: 0;
-      transition: all .3s cubic-bezier(.4,0,.2,1);
-      max-width: 320px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.2);
-    }
+    /* GOAL BARS */
+    .goal-bar { margin-bottom: 14px; }
+    .goal-bar-hdr { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 6px; color: #475569; }
+    .goal-bar-hdr strong { color: #0f172a; }
+    .prog-track { background: #e2e8f0; border-radius: 999px; height: 10px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#16a34a,#059669); transition: width .6s ease; }
+    .prog-fill.great { background: linear-gradient(90deg,#10b981,#0d9488); }
+    .prog-note { font-size: .7rem; color: #64748b; margin-top: 4px; }
+
+    /* MONTHLY TABLE */
+    .target-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .target-table th { background: #f8fafc; color: #475569; font-weight: 700; font-size: .7rem; text-transform: uppercase; padding: 8px 10px; text-align: left; }
+    .target-table td { padding: 9px 10px; border-top: 1px solid #f1f5f9; }
+    .t-badge { font-size: .72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+    .t-badge.done    { background: #dcfce7; color: #16a34a; }
+    .t-badge.current { background: #fef9c3; color: #92400e; }
+    .t-badge.future  { background: #f1f5f9; color: #94a3b8; }
+
+    /* FITNESS BARS */
+    .fit-item { margin-bottom: 14px; }
+    .fit-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .fit-name { font-size: .85rem; font-weight: 700; }
+    .fit-vals { font-size: .79rem; color: #64748b; }
+    .fit-vals strong { color: #16a34a; }
+
+    /* LOG LIST */
+    .log-list { display: flex; flex-direction: column; gap: 8px; }
+    .log-card { background: #f8fafc; border-radius: 10px; padding: 11px 13px; border: 1px solid #f1f5f9; border-left: 4px solid #16a34a; }
+    .log-card.cardio { border-left-color: #0ea5e9; }
+    .log-card.rest   { border-left-color: #94a3b8; }
+    .log-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .log-type-lbl { font-size: .87rem; font-weight: 700; color: #0f172a; }
+    .log-date-lbl { font-size: .7rem; color: #94a3b8; }
+    .log-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip { font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+    .chip.green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .chip.amber { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .chip.blue  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .chip.gray  { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+    /* CHECK-IN LIST */
+    .ci-card { background: #f8fafc; border-radius: 10px; padding: 11px 13px; border: 1px solid #f1f5f9; border-left: 4px solid #8b5cf6; margin-bottom: 8px; }
+    .ci-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .ci-week { font-size: .87rem; font-weight: 700; color: #0f172a; }
+    .ci-date { font-size: .7rem; color: #94a3b8; }
+
+    /* CHARTS */
+    .chart-box { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.07); margin-bottom: 14px; }
+    .chart-title { font-size: .72rem; font-weight: 700; color: #374151; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* INFO BOX */
+    .info-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 11px 14px; font-size: .81rem; color: #15803d; line-height: 1.6; margin-bottom: 14px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 600; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal-box { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: scale(.95); transition: transform .25s; }
+    .modal-overlay.show .modal-box { transform: scale(1); }
+    .modal-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
+    .modal-form { display: flex; flex-direction: column; gap: 12px; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: calc(28px + env(safe-area-inset-bottom)); right: 20px; padding: 12px 18px; border-radius: 10px; color: #fff; font-weight: 600; font-size: .88rem; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.4,0,.2,1); max-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { background: #10b981; }
-    .toast.error   { background: #ef4444; }
-    .toast.info    { background: #4f46e5; }
+    .toast.success { background: #16a34a; }
+    .toast.error   { background: #dc2626; }
+    .toast.info    { background: #0ea5e9; }
 
-    /* ── SPINNER ── */
-    .spinner {
-      display: inline-block;
-      width: 18px; height: 18px;
-      border: 2.5px solid rgba(255,255,255,.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .75s linear infinite;
-      flex-shrink: 0;
-    }
+    /* SPINNER */
+    .spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .75s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── RESPONSIVE: tablet ── */
+    /* EMPTY */
+    .empty-state { text-align: center; padding: 28px; color: #94a3b8; font-size: .87rem; }
+
+    /* RESPONSIVE */
     @media (max-width: 700px) {
       .form-grid { grid-template-columns: 1fr; }
       .form-group.span2 { grid-column: span 1; }
-      .summary-grid { grid-template-columns: 1fr 1fr; }
-      .summary-grid .s-card:last-child { grid-column: span 2; }
-      .charts-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .stat-grid .stat-card:last-child { grid-column: span 2; }
     }
-
-    /* ── RESPONSIVE: mobile ── */
     @media (max-width: 600px) {
       .top-nav { display: none; }
       .bottom-nav { display: block; }
       body { padding-bottom: calc(env(safe-area-inset-bottom) + 64px); }
-      .page { padding: 12px; }
-      .header { top: 0; }
-      .toast {
-        bottom: calc(76px + env(safe-area-inset-bottom));
-        right: 12px; left: 12px;
-        max-width: none;
-      }
-      .s-card .s-amount { font-size: 1.15rem; }
-      .period-row { flex-wrap: wrap; gap: 8px; }
+      .toast { bottom: calc(76px + env(safe-area-inset-bottom)); right: 12px; left: 12px; max-width: none; }
     }
-
-    @media (max-width: 420px) {
-      .summary-grid { grid-template-columns: 1fr; }
-      .summary-grid .s-card:last-child { grid-column: span 1; }
+    @media (max-width: 380px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .stat-grid .stat-card:last-child { grid-column: span 1; }
     }
   </style>
 </head>
@@ -539,243 +217,302 @@
 
 <!-- HEADER -->
 <div class="header">
-  <h1>💰 รายรับ-รายจ่าย</h1>
-  <span class="conn-badge loading" id="connBadge">
-    <span class="spinner" style="width:10px;height:10px;border-width:1.5px;vertical-align:middle;margin-right:4px;"></span>
-    กำลังเชื่อมต่อ...
-  </span>
+  <div class="header-left">
+    <h1>🔥 Fat Loss Tracker</h1>
+    <div class="header-sub" id="headerSub">กำลังโหลด...</div>
+  </div>
+  <div class="header-right">
+    <button class="settings-btn" onclick="openSettings()">⚙️</button>
+    <span class="conn-badge loading" id="connBadge">
+      <span class="spinner" style="width:10px;height:10px;border-width:1.5px;vertical-align:middle;margin-right:4px;"></span>
+      เชื่อมต่อ...
+    </span>
+  </div>
 </div>
 
 <!-- TOP NAV (desktop) -->
 <div class="top-nav">
-  <button class="nav-btn active" data-page="entry" onclick="switchPage('entry')">📝 บันทึกรายการ</button>
-  <button class="nav-btn"        data-page="dashboard" onclick="switchPage('dashboard')">📊 แดชบอร์ด</button>
+  <button class="nav-btn active" data-page="log"      onclick="switchPage('log')">📝 บันทึกวันนี้</button>
+  <button class="nav-btn"        data-page="checkin"  onclick="switchPage('checkin')">📏 Check-in</button>
+  <button class="nav-btn"        data-page="progress" onclick="switchPage('progress')">📊 ความก้าวหน้า</button>
 </div>
 
-<!-- ═══ ENTRY PAGE ═══ -->
-<div class="page active" id="entryPage">
+<!-- ═══ LOG PAGE ═══ -->
+<div class="page active" id="logPage">
+
+  <div id="wbWrap"></div>
+  <div class="week-strip" id="weekStrip"></div>
 
   <div class="card">
-    <div class="card-title" id="formTitle">📋 บันทึกรายการใหม่</div>
-    <div class="edit-banner" id="editBanner">
-      <span>✏️ โหมดแก้ไขรายการ — แถวที่ <strong id="editRowLabel"></strong></span>
-      <button class="act-btn edit" onclick="cancelEdit()">ยกเลิก ✕</button>
-    </div>
-    <div class="form-grid">
+    <div class="card-title">📝 บันทึกการออกกำลังกายวันนี้</div>
 
+    <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" id="txDate" />
+        <input type="date" id="logDate" />
       </div>
-
       <div class="form-group">
-        <label class="label-row">ประเภท <button class="manage-btn" onclick="openMgmt('type')">⚙️ จัดการ</button></label>
-        <select id="txType" onchange="onTypeChange(this.value)"></select>
-      </div>
-
-      <div class="form-group">
-        <label class="label-row">หมวดหมู่ <button class="manage-btn" onclick="openMgmt('cat')">⚙️ จัดการ</button></label>
-        <select id="txCategory">
-          <option value="">-- เลือกหมวดหมู่ --</option>
+        <label>ประเภทกิจกรรม</label>
+        <select id="logType" onchange="onTypeChange(this.value)">
+          <option value="Bodyweight A">💪 Bodyweight A (จันทร์)</option>
+          <option value="Bodyweight B">💪 Bodyweight B (อังคาร)</option>
+          <option value="Bodyweight C">💪 Bodyweight C (พฤหัส)</option>
+          <option value="Pickleball">🏓 พิกเคิลบอล</option>
+          <option value="Walking">🚶 เดิน/กิจกรรมเบา</option>
+          <option value="Rest">😴 วันพัก</option>
         </select>
       </div>
-
-      <div class="form-group">
-        <label>จำนวนเงิน (บาท)</label>
-        <input type="number" id="txAmount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
-      </div>
-
-      <div class="form-group span2">
-        <label>หมายเหตุ <span style="font-weight:400;text-transform:none;font-size:.75rem;">(ไม่จำเป็น)</span></label>
-        <input type="text" id="txNote" placeholder="รายละเอียดเพิ่มเติม..." autocomplete="off" />
-      </div>
-
     </div>
-    <button class="btn-primary" id="submitBtn" onclick="submitEntry()">
-      บันทึกรายการ
-    </button>
-    <button class="btn-cancel" id="cancelBtn" style="display:none" onclick="cancelEdit()">
-      ยกเลิกการแก้ไข
-    </button>
+
+    <!-- Bodyweight fields -->
+    <div id="bwGroup">
+      <div class="sec-sep">ผลการออกกำลังกาย (เซตดีที่สุด)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>วิดพื้น</label>
+          <div class="unit-wrap"><input type="number" id="logPushups" min="0" max="200" placeholder="เช่น 8" inputmode="numeric" /><span class="unit-lbl">ครั้ง</span></div>
+        </div>
+        <div class="form-group">
+          <label>สควอท</label>
+          <div class="unit-wrap"><input type="number" id="logSquats" min="0" max="200" placeholder="เช่น 12" inputmode="numeric" /><span class="unit-lbl">ครั้ง</span></div>
+        </div>
+        <div class="form-group">
+          <label>แพลงก์ (ดีที่สุด)</label>
+          <div class="unit-wrap"><input type="number" id="logPlank" min="0" max="600" placeholder="เช่น 45" inputmode="numeric" /><span class="unit-lbl">วินาที</span></div>
+        </div>
+        <div class="form-group">
+          <label>Abs Roll</label>
+          <div class="unit-wrap"><input type="number" id="logAbsRoll" min="0" max="100" placeholder="เช่น 8" inputmode="numeric" /><span class="unit-lbl">ครั้ง</span></div>
+        </div>
+        <div class="form-group">
+          <label>คาร์ดิโอ</label>
+          <select id="logCardioType">
+            <option value="เดินเร็ว">เดินเร็ว</option>
+            <option value="โดดเชือก">โดดเชือก</option>
+            <option value="ไม่ได้ทำ">ไม่ได้ทำ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>คาร์ดิโอ (นาที)</label>
+          <div class="unit-wrap"><input type="number" id="logCardioMin" min="0" max="120" placeholder="เช่น 20" inputmode="numeric" /><span class="unit-lbl">นาที</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pickleball fields -->
+    <div id="pbGroup" style="display:none">
+      <div class="sec-sep">พิกเคิลบอล</div>
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>ระยะเวลา</label>
+          <div class="unit-wrap"><input type="number" id="logPbMin" min="0" max="360" value="180" inputmode="numeric" /><span class="unit-lbl">นาที</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Walking fields -->
+    <div id="walkGroup" style="display:none">
+      <div class="sec-sep">เดิน/กิจกรรมเบา</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>จำนวนก้าว</label>
+          <div class="unit-wrap"><input type="number" id="logSteps" min="0" max="50000" placeholder="เช่น 8000" inputmode="numeric" /><span class="unit-lbl">ก้าว</span></div>
+        </div>
+        <div class="form-group">
+          <label>ระยะเวลา</label>
+          <div class="unit-wrap"><input type="number" id="logWalkMin" min="0" max="300" placeholder="เช่น 45" inputmode="numeric" /><span class="unit-lbl">นาที</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-sep">โภชนาการวันนี้</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>แคลอรีทั้งวัน</label>
+        <div class="unit-wrap"><input type="number" id="logCal" min="0" max="5000" placeholder="เช่น 2000" inputmode="numeric" /><span class="unit-lbl">kcal</span></div>
+      </div>
+      <div class="form-group">
+        <label>โปรตีน</label>
+        <div class="unit-wrap"><input type="number" id="logProt" min="0" max="400" placeholder="เช่น 160" inputmode="numeric" /><span class="unit-lbl">กรัม</span></div>
+      </div>
+      <div class="form-group">
+        <label>น้ำ</label>
+        <div class="unit-wrap"><input type="number" id="logWater" min="0" max="10" step="0.1" placeholder="เช่น 3.0" inputmode="decimal" /><span class="unit-lbl">ลิตร</span></div>
+      </div>
+      <div class="form-group">
+        <label>หมายเหตุ</label>
+        <input type="text" id="logNote" placeholder="รายละเอียดเพิ่มเติม..." autocomplete="off" />
+      </div>
+    </div>
+    <button class="btn-primary" id="logBtn" onclick="submitLog()">💾 บันทึกวันนี้</button>
   </div>
 
   <div class="card">
     <div class="card-title">
-      <span>📄 รายการล่าสุด</span>
-      <button class="refresh-link" onclick="loadRecentEntries(true)">รีเฟรช ↻</button>
+      <span>📋 บันทึกล่าสุด</span>
+      <button class="refresh-link" onclick="loadLogs(true)">รีเฟรช ↻</button>
     </div>
-    <div class="search-wrap">
-      <input type="search" class="search-input" id="searchRecent" placeholder="ค้นหาจากหมายเหตุ..." oninput="filterRecent()" />
-    </div>
-    <div class="recent-date-filter">
-      <div class="rdf-group">
-        <label>จากวันที่</label>
-        <input type="date" id="recentDateFrom" onchange="filterRecent()" />
-      </div>
-      <div class="rdf-group">
-        <label>ถึงวันที่</label>
-        <input type="date" id="recentDateTo" onchange="filterRecent()" />
-      </div>
-      <button class="btn-reset" onclick="clearRecentFilter()">🔄 รีเซ็ต</button>
-    </div>
-    <div class="rec-list" id="recentList">
-      <div class="empty-state">กำลังโหลด...</div>
-    </div>
+    <div id="logList"><div class="empty-state">กำลังโหลด...</div></div>
   </div>
 </div>
 
-<!-- ═══ DASHBOARD PAGE ═══ -->
-<div class="page" id="dashboardPage">
-
-  <div class="period-row">
-    <h2>📊 ภาพรวมการเงิน</h2>
-    <div class="period-pills">
-      <button class="p-pill active" data-period="month" onclick="setPeriod(this)">เดือนนี้</button>
-      <button class="p-pill"        data-period="year"  onclick="setPeriod(this)">ปีนี้</button>
-      <button class="p-pill"        data-period="all"   onclick="setPeriod(this)">ทั้งหมด</button>
-    </div>
+<!-- ═══ CHECK-IN PAGE ═══ -->
+<div class="page" id="checkinPage">
+  <div class="info-box">
+    📌 <strong>วิธีวัดที่ถูกต้อง:</strong> ชั่งน้ำหนักตอนเช้าหลังเข้าห้องน้ำ ก่อนกินอาหาร
+    วัดรอบเอวที่ระดับสะดือ หายใจออกตามปกติ ทำทุกสัปดาห์ วันเดิม เวลาเดิม
   </div>
-
-  <!-- Filters -->
-  <div class="card filter-card">
-    <div class="filter-row">
-      <div class="filter-group">
-        <label>ปี</label>
-        <select id="filterYear" onchange="applyFilters()">
-          <option value="">ทุกปี</option>
+  <div class="card">
+    <div class="card-title">📏 Check-in รายสัปดาห์</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>วันที่</label>
+        <input type="date" id="ciDate" onchange="updateCiWeek(this.value)" />
+      </div>
+      <div class="form-group">
+        <label>สัปดาห์ที่</label>
+        <input type="number" id="ciWeek" min="1" max="12" readonly style="background:#f8fafc;color:#64748b" />
+      </div>
+      <div class="form-group">
+        <label>น้ำหนัก</label>
+        <div class="unit-wrap"><input type="number" id="ciWeight" min="40" max="200" step="0.1" placeholder="เช่น 95.2" inputmode="decimal" /><span class="unit-lbl">กก.</span></div>
+      </div>
+      <div class="form-group">
+        <label>% ไขมัน (ถ้ามี)</label>
+        <div class="unit-wrap"><input type="number" id="ciBF" min="5" max="60" step="0.1" placeholder="เช่น 29.0" inputmode="decimal" /><span class="unit-lbl">%</span></div>
+      </div>
+      <div class="form-group">
+        <label>รอบเอว</label>
+        <div class="unit-wrap"><input type="number" id="ciWaist" min="50" max="200" step="0.5" placeholder="เช่น 102" inputmode="decimal" /><span class="unit-lbl">ซม.</span></div>
+      </div>
+      <div class="form-group">
+        <label>วิดพื้นต่อเนื่องสูงสุด</label>
+        <div class="unit-wrap"><input type="number" id="ciPushups" min="0" max="200" placeholder="เช่น 10" inputmode="numeric" /><span class="unit-lbl">ครั้ง</span></div>
+      </div>
+      <div class="form-group">
+        <label>แพลงก์นานที่สุด</label>
+        <div class="unit-wrap"><input type="number" id="ciPlank" min="0" max="600" placeholder="เช่น 45" inputmode="numeric" /><span class="unit-lbl">วินาที</span></div>
+      </div>
+      <div class="form-group">
+        <label>Abs Roll สูงสุด</label>
+        <div class="unit-wrap"><input type="number" id="ciAbsRoll" min="0" max="100" placeholder="เช่น 8" inputmode="numeric" /><span class="unit-lbl">ครั้ง</span></div>
+      </div>
+      <div class="form-group">
+        <label>ระดับพลังงาน (1–5)</label>
+        <select id="ciEnergy">
+          <option value="">-- เลือก --</option>
+          <option value="1">1 – เหนื่อยมาก</option>
+          <option value="2">2 – เหนื่อยพอควร</option>
+          <option value="3">3 – ปกติ</option>
+          <option value="4">4 – ดี</option>
+          <option value="5">5 – ดีมาก / เต็มพลัง</option>
         </select>
       </div>
-      <div class="filter-group">
-        <label>เดือน</label>
-        <select id="filterMonth" onchange="applyFilters()">
-          <option value="">ทุกเดือน</option>
-          <option value="1">มกราคม</option>
-          <option value="2">กุมภาพันธ์</option>
-          <option value="3">มีนาคม</option>
-          <option value="4">เมษายน</option>
-          <option value="5">พฤษภาคม</option>
-          <option value="6">มิถุนายน</option>
-          <option value="7">กรกฎาคม</option>
-          <option value="8">สิงหาคม</option>
-          <option value="9">กันยายน</option>
-          <option value="10">ตุลาคม</option>
-          <option value="11">พฤศจิกายน</option>
-          <option value="12">ธันวาคม</option>
-        </select>
+      <div class="form-group">
+        <label>ชั่วโมงการนอน</label>
+        <div class="unit-wrap"><input type="number" id="ciSleep" min="3" max="12" step="0.5" placeholder="เช่น 7.5" inputmode="decimal" /><span class="unit-lbl">ชม.</span></div>
       </div>
-      <div class="filter-group">
-        <label>ประเภท</label>
-        <select id="filterType" onchange="applyFilters()">
-          <option value="">ทุกประเภท</option>
-          <option value="รายรับ">รายรับ (Income)</option>
-          <option value="รายจ่าย (Debit)">รายจ่าย – Debit</option>
-          <option value="รายจ่าย (Credit)">รายจ่าย – Credit</option>
-        </select>
+      <div class="form-group span2">
+        <label>หมายเหตุ</label>
+        <input type="text" id="ciNote" placeholder="ความรู้สึก, สิ่งที่สังเกต..." autocomplete="off" />
       </div>
-      <div class="filter-group">
-        <label>หมวดหมู่</label>
-        <select id="filterCategory" onchange="applyFilters()">
-          <option value="">ทุกหมวดหมู่</option>
-        </select>
-      </div>
-      <button class="btn-reset" onclick="resetFilters()">🔄 รีเซ็ต</button>
     </div>
-  </div>
-
-  <div class="summary-grid">
-    <div class="s-card inc">
-      <div class="s-label">รายรับรวม</div>
-      <div class="s-amount" id="sumIncome">-</div>
-      <div class="s-sub"    id="sumIncomeCount">-</div>
-    </div>
-    <div class="s-card exp">
-      <div class="s-label">รายจ่ายรวม</div>
-      <div class="s-amount" id="sumExpense">-</div>
-      <div class="s-sub"    id="sumExpenseCount">-</div>
-    </div>
-    <div class="s-card bal">
-      <div class="s-label">คงเหลือสุทธิ</div>
-      <div class="s-amount" id="sumBalance">-</div>
-      <div class="s-sub"    id="sumBalanceSub"></div>
-    </div>
-  </div>
-
-  <div class="charts-grid">
-    <div class="chart-box">
-      <div class="chart-title">รายจ่ายตามหมวด</div>
-      <canvas id="pieChart"></canvas>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title">รายรับ-รายจ่าย</div>
-      <canvas id="barChart"></canvas>
-    </div>
+    <button class="btn-primary" id="ciBtn" onclick="submitCheckin()">💾 บันทึก Check-in</button>
   </div>
 
   <div class="card">
     <div class="card-title">
-      <span>📋 รายการทั้งหมด</span>
-      <button class="refresh-link" onclick="loadDashboard(true)">รีเฟรช ↻</button>
+      <span>📋 ประวัติ Check-in</span>
+      <button class="refresh-link" onclick="loadCheckins(true)">รีเฟรช ↻</button>
     </div>
-    <div class="search-wrap">
-      <input type="search" class="search-input" id="searchAll" placeholder="ค้นหาจากหมายเหตุ..." oninput="filterAll()" />
+    <div id="ciList"><div class="empty-state">กำลังโหลด...</div></div>
+  </div>
+</div>
+
+<!-- ═══ PROGRESS PAGE ═══ -->
+<div class="page" id="progressPage">
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">น้ำหนักล่าสุด</div>
+      <div class="stat-value" id="statW">–</div>
+      <div class="stat-diff neutral" id="statWd">–</div>
     </div>
-    <div class="recent-date-filter">
-      <div class="rdf-group">
-        <label>จากวันที่</label>
-        <input type="date" id="filterDateFrom" onchange="applyFilters()" />
-      </div>
-      <div class="rdf-group">
-        <label>ถึงวันที่</label>
-        <input type="date" id="filterDateTo" onchange="applyFilters()" />
-      </div>
-      <button class="btn-reset" onclick="clearDashDateFilter()">🔄 รีเซ็ต</button>
+    <div class="stat-card">
+      <div class="stat-label">% ไขมัน</div>
+      <div class="stat-value" id="statBF">–</div>
+      <div class="stat-diff neutral" id="statBFd">–</div>
     </div>
-    <div id="allListCount" style="font-size:.75rem;color:#64748b;margin-bottom:8px;display:none"></div>
-    <div class="rec-list" id="allList">
-      <div class="empty-state">กำลังโหลด...</div>
+    <div class="stat-card">
+      <div class="stat-label">สัปดาห์ที่</div>
+      <div class="stat-value" id="statWk">–</div>
+      <div class="stat-diff neutral" id="statWkd">จาก 12 สัปดาห์</div>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 ความก้าวหน้าสู่เป้าหมาย</div>
+    <div id="goalBars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 เป้าหมายรายเดือน</div>
+    <table class="target-table">
+      <thead><tr><th>เดือน</th><th>น้ำหนัก</th><th>ไขมัน</th><th>สถานะ</th></tr></thead>
+      <tbody id="targetBody"></tbody>
+    </table>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-title">น้ำหนัก (กก.) รายสัปดาห์</div>
+    <canvas id="wChart" height="180"></canvas>
+  </div>
+
+  <div class="chart-box" id="bfChartBox" style="display:none">
+    <div class="chart-title">% ไขมัน รายสัปดาห์</div>
+    <canvas id="bfChart" height="180"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💪 ความก้าวหน้าด้านฟิตเนส</div>
+    <div id="fitProgress"></div>
   </div>
 </div>
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="bnav-btn active" data-page="entry" onclick="switchPage('entry')">
-      <span class="bnav-icon">📝</span>
-      บันทึก
-    </button>
-    <button class="bnav-btn" data-page="dashboard" onclick="switchPage('dashboard')">
-      <span class="bnav-icon">📊</span>
-      แดชบอร์ด
-    </button>
+    <button class="bnav-btn active" data-page="log"      onclick="switchPage('log')"><span class="bnav-icon">📝</span>บันทึก</button>
+    <button class="bnav-btn"        data-page="checkin"  onclick="switchPage('checkin')"><span class="bnav-icon">📏</span>Check-in</button>
+    <button class="bnav-btn"        data-page="progress" onclick="switchPage('progress')"><span class="bnav-icon">📊</span>ความก้าวหน้า</button>
   </div>
 </nav>
 
-<!-- MANAGEMENT MODAL (categories & types) -->
-<div class="modal-overlay" id="mgmtModal" onclick="closeMgmt()">
-  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:420px">
-    <div class="modal-title" id="mgmtTitle"></div>
-    <div class="mgmt-list" id="mgmtList"></div>
-    <div class="mgmt-add-row">
-      <input type="text" class="mgmt-input" id="mgmtNewInput" placeholder="พิมพ์ชื่อใหม่..."
-             onkeydown="if(event.key==='Enter') mgmtAddItem()" />
-      <button class="mgmt-add-btn" onclick="mgmtAddItem()">+ เพิ่ม</button>
+<!-- FIRST-RUN MODAL -->
+<div class="modal-overlay" id="firstRunModal">
+  <div class="modal-box">
+    <div class="modal-title">🔥 ตั้งค่าโปรแกรมเริ่มต้น</div>
+    <p style="font-size:.83rem;color:#475569;line-height:1.6;margin-bottom:14px">กรอกข้อมูลเริ่มต้นเพื่อให้ระบบคำนวณสัปดาห์และความก้าวหน้าได้ถูกต้อง</p>
+    <div class="modal-form">
+      <div class="form-group"><label>วันเริ่มโปรแกรม (สัปดาห์ที่ 1)</label><input type="date" id="frStart" /></div>
+      <div class="form-group"><label>น้ำหนักเริ่มต้น (กก.)</label><input type="number" id="frWeight" step="0.1" value="97.4" /></div>
+      <div class="form-group"><label>% ไขมันเริ่มต้น</label><input type="number" id="frBF" step="0.1" value="30.6" /></div>
     </div>
-    <div class="mgmt-hint" id="mgmtHint"></div>
-    <button class="btn-primary" style="margin-top:14px" onclick="closeMgmt()">✅ เสร็จสิ้น</button>
+    <button class="btn-primary" style="margin-top:14px" onclick="saveFirstRun()">🚀 เริ่มโปรแกรม!</button>
   </div>
 </div>
 
-<!-- DUPLICATE MODAL -->
-<div class="modal-overlay" id="dupModal" onclick="closeDupModal()">
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="closeSettings()">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-title">📋 ทำซ้ำรายการ</div>
-    <div class="modal-info" id="dupInfo"></div>
-    <label class="modal-label">เลือกวันที่สำหรับรายการสำเนา</label>
-    <input type="date" id="dupDate" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.95rem;min-height:46px;" />
+    <div class="modal-title">⚙️ ตั้งค่า</div>
+    <div class="modal-form">
+      <div class="form-group"><label>วันเริ่มโปรแกรม</label><input type="date" id="setStart" /></div>
+      <div class="form-group"><label>น้ำหนักเริ่มต้น (กก.)</label><input type="number" id="setWeight" step="0.1" /></div>
+      <div class="form-group"><label>% ไขมันเริ่มต้น</label><input type="number" id="setBF" step="0.1" /></div>
+    </div>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeDupModal()">ยกเลิก</button>
-      <button class="btn-primary" id="dupSaveBtn" onclick="confirmDuplicate()">💾 บันทึกสำเนา</button>
+      <button class="btn-cancel" onclick="closeSettings()">ยกเลิก</button>
+      <button class="btn-primary" style="margin-top:0;flex:2" onclick="saveSettings()">✅ บันทึก</button>
     </div>
   </div>
 </div>
@@ -783,11 +520,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════
-//  SERVICE ACCOUNT CONFIG
-// ═══════════════════════════════════════════════════
-const SA_EMAIL       = 'google-sheet@slide-maker-496815.iam.gserviceaccount.com';
-const SA_PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
+// ─── AUTH CONFIG ──────────────────────────────────
+const SA_EMAIL = 'google-sheet@slide-maker-496815.iam.gserviceaccount.com';
+const SA_KEY   = `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC6Ee0vKsRdWYLm
 RuiRGA4f3m1jdr9BXyfTzML9dRL3AC3Vw94BhlMNmj3J/t9MHdp/6sSCTW+C33hk
 XGWfXqV5cFlFItq5u88CYXFigFV2Zp7Y8SlaTsmAEdp0vzr8Cqgz/Gk5zkKH0mJo
@@ -816,1000 +551,546 @@ y05gVpUsTpvQlyXE33/OOEEF4fFMybb9bVejyq/WVEtsCee0pNib0/kNWFGrdEq/
 2JVlEef0AC02VAY6Ba4NmnU=
 -----END PRIVATE KEY-----`;
 
-const SPREADSHEET_ID = '1ZoBUOl6lsWcwgOhbUUWr4q4TGNHzwb2eX1J9GUf7Nb4';
-const SHEET_NAME     = 'Input Event';
-const SHEETS_BASE    = 'https://sheets.googleapis.com/v4/spreadsheets';
-const TOKEN_URL      = 'https://oauth2.googleapis.com/token';
-const SCOPE          = 'https://www.googleapis.com/auth/spreadsheets';
+const SSID        = '1ZoBUOl6lsWcwgOhbUUWr4q4TGNHzwb2eX1J9GUf7Nb4';
+const WS          = 'Workout Log';
+const CS          = 'Weekly Checkin';
+const BASE        = 'https://sheets.googleapis.com/v4/spreadsheets';
+const TOKEN_URL   = 'https://oauth2.googleapis.com/token';
+const SCOPE       = 'https://www.googleapis.com/auth/spreadsheets';
+const WS_HDR      = ['Date','Type','Pushups','Squats','Plank_sec','AbsRoll','Cardio','Cardio_min','Calories','Protein_g','Water_L','Note'];
+const CS_HDR      = ['Date','Week','Weight_kg','BodyFat_pct','Waist_cm','MaxPushups','MaxPlank_sec','MaxAbsRoll','Energy','Sleep_hrs','Note'];
 
-const TYPE_INCOME = 'รายรับ';
-const TYPE_DEBIT  = 'รายจ่าย (Debit)';
+// ─── WORKOUT PROGRAM ──────────────────────────────
+const PROG = {
+  1:{
+    A:{ex:[{n:'วิดพื้น',s:3,t:'6–8'},{n:'สควอท',s:3,t:'10–12'},{n:'แพลงก์',s:3,t:'20–30 วิ'},{n:'Abs Roll',s:2,t:'5–8'}],cardio:'เดินเร็ว 20 นาที หรือโดดเชือก 5×1 นาที',rest:'60–90 วิ'},
+    B:{ex:[{n:'วิดพื้น',s:4,t:'5–6'},{n:'สควอท',s:4,t:'12'},{n:'แพลงก์',s:3,t:'30 วิ'},{n:'Abs Roll',s:3,t:'5'}],cardio:'เดินเร็ว 25 นาที',rest:'60–90 วิ'},
+    C:{circ:true,rnd:3,ex:[{n:'วิดพื้น',t:'6'},{n:'สควอท',t:'12'},{n:'แพลงก์',t:'20 วิ'},{n:'Abs Roll',t:'5'}],cardio:'เดิน 20 นาที',rest:'พัก 2 นาที/รอบ'},
+  },
+  2:{
+    A:{ex:[{n:'วิดพื้น',s:4,t:'8–10'},{n:'สควอท',s:4,t:'15'},{n:'แพลงก์',s:3,t:'40–45 วิ'},{n:'Abs Roll',s:3,t:'8–10'}],cardio:'โดดเชือก 6×1 นาที พัก 45 วิ',rest:'60–90 วิ'},
+    B:{ex:[{n:'วิดพื้น',s:5,t:'6–8'},{n:'สควอท',s:5,t:'15'},{n:'แพลงก์',s:3,t:'45 วิ'},{n:'Abs Roll',s:3,t:'8'}],cardio:'เดินเร็ว 30 นาที',rest:'60–90 วิ'},
+    C:{circ:true,rnd:4,ex:[{n:'วิดพื้น',t:'8'},{n:'สควอท',t:'15'},{n:'แพลงก์',t:'30 วิ'},{n:'Abs Roll',t:'8'}],cardio:'เดิน 15 นาที',rest:'พัก 90 วิ/รอบ'},
+  },
+  3:{
+    A:{ex:[{n:'วิดพื้น',s:5,t:'10–12'},{n:'สควอท',s:5,t:'20'},{n:'แพลงก์',s:3,t:'60 วิ'},{n:'Abs Roll',s:4,t:'10–12'}],cardio:'โดดเชือก 8×1 นาที พัก 30 วิ',rest:'60 วิ'},
+    B:{ex:[{n:'วิดพื้น',s:4,t:'12'},{n:'สควอท',s:4,t:'20'},{n:'แพลงก์',s:3,t:'60 วิ'},{n:'Abs Roll',s:4,t:'10'}],cardio:'เดินเร็ว 35 นาที',rest:'60 วิ'},
+    C:{circ:true,rnd:5,ex:[{n:'วิดพื้น',t:'10'},{n:'สควอท',t:'20'},{n:'แพลงก์',t:'40 วิ'},{n:'Abs Roll',t:'10'}],cardio:'เดิน 20 นาที',rest:'พัก 60 วิ/รอบ'},
+  },
+};
+// dow: 0=Sun,1=Mon...6=Sat → workout key
+const DAY_SCH  = {1:'A',2:'B',3:'Pickleball',4:'C',5:'Pickleball',6:'Walking',0:'Rest'};
+const DAY_SH   = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+const DAY_LG   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสฯ','ศุกร์','เสาร์'];
+const MONTHS   = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
-function parseAmount(v) {
-  if (typeof v === 'number') return v;
-  return parseFloat(String(v).replace(/[฿,\s]/g, '')) || 0;
-}
-
-function parseDate(s) {
-  if (!s) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00');
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
-    const [d, m, y] = s.split('/').map(Number);
-    return new Date(y, m - 1, d);
-  }
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
-}
-
-// ═══════════════════════════════════════════════════
-//  TOKEN
-// ═══════════════════════════════════════════════════
-let _accessToken  = null;
-let _tokenExpires = 0;
-
+// ─── TOKEN ────────────────────────────────────────
+let _tok = null, _tokExp = 0;
 async function getToken() {
-  if (_accessToken && Date.now() < _tokenExpires - 60_000) return _accessToken;
-  _accessToken  = await fetchNewToken();
-  _tokenExpires = Date.now() + 3_600_000;
-  return _accessToken;
+  if (_tok && Date.now() < _tokExp - 60000) return _tok;
+  _tok = await fetchToken(); _tokExp = Date.now() + 3600000; return _tok;
 }
-
-function b64url(input) {
-  let bytes = typeof input === 'string' ? new TextEncoder().encode(input) : new Uint8Array(input);
-  let binary = '';
-  bytes.forEach(b => binary += String.fromCharCode(b));
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+function b64u(x) {
+  const b = typeof x==='string' ? new TextEncoder().encode(x) : new Uint8Array(x);
+  let s=''; b.forEach(v=>s+=String.fromCharCode(v));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 }
-
-async function importPrivateKey(pem) {
-  const clean = pem.replace(/-----BEGIN PRIVATE KEY-----/, '').replace(/-----END PRIVATE KEY-----/, '').replace(/\s+/g, '');
-  const binary = atob(clean);
-  const buf = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) buf[i] = binary.charCodeAt(i);
-  return crypto.subtle.importKey('pkcs8', buf.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+async function importKey() {
+  const pem = SA_KEY.replace(/-----[^-]+-----/g,'').replace(/\s+/g,'');
+  const bin = atob(pem); const buf = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+  return crypto.subtle.importKey('pkcs8',buf.buffer,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
 }
-
 async function makeJWT() {
-  const now  = Math.floor(Date.now() / 1000);
-  const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const body = b64url(JSON.stringify({ iss: SA_EMAIL, scope: SCOPE, aud: TOKEN_URL, iat: now, exp: now + 3600 }));
-  const signingInput = `${head}.${body}`;
-  const key = await importPrivateKey(SA_PRIVATE_KEY);
-  const sig  = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(signingInput));
-  return `${signingInput}.${b64url(sig)}`;
+  const now=Math.floor(Date.now()/1000);
+  const h=b64u(JSON.stringify({alg:'RS256',typ:'JWT'}));
+  const p=b64u(JSON.stringify({iss:SA_EMAIL,scope:SCOPE,aud:TOKEN_URL,iat:now,exp:now+3600}));
+  const si=`${h}.${p}`; const k=await importKey();
+  const sg=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',k,new TextEncoder().encode(si));
+  return `${si}.${b64u(sg)}`;
+}
+async function fetchToken() {
+  const jwt=await makeJWT();
+  const r=await fetch(TOKEN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:`grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`});
+  const d=await r.json();
+  if(!d.access_token) throw new Error(d.error_description||'Token failed');
+  return d.access_token;
 }
 
-async function fetchNewToken() {
-  const jwt = await makeJWT();
-  const res = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
-  });
-  const data = await res.json();
-  if (!data.access_token) throw new Error(data.error_description || 'Token request failed');
-  return data.access_token;
+// ─── SHEETS API ───────────────────────────────────
+async function sGet(range) {
+  const t=await getToken();
+  const r=await fetch(`${BASE}/${SSID}/values/${encodeURIComponent(range)}`,{headers:{Authorization:`Bearer ${t}`}});
+  if(!r.ok) throw new Error(`GET ${r.status}`); return r.json();
 }
-
-// ═══════════════════════════════════════════════════
-//  SHEETS REST HELPERS
-// ═══════════════════════════════════════════════════
-async function sheetsGet(range) {
-  const tok = await getToken();
-  const res = await fetch(`${SHEETS_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`, {
-    headers: { Authorization: `Bearer ${tok}` },
-  });
-  if (!res.ok) throw new Error(`Sheets GET failed: ${res.status}`);
-  return res.json();
+async function sPut(range,vals) {
+  const t=await getToken();
+  const r=await fetch(`${BASE}/${SSID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
+    {method:'PUT',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({values:vals})});
+  if(!r.ok) throw new Error(`PUT ${r.status}`); return r.json();
 }
-
-async function sheetsAppend(range, values) {
-  const tok = await getToken();
-  const res = await fetch(
-    `${SHEETS_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-    { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) }
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Sheets append failed: ${res.status}`);
+async function sAppend(sheet,vals) {
+  const t=await getToken();
+  const r=await fetch(`${BASE}/${SSID}/values/${encodeURIComponent("'"+sheet+"'!A:Z")}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    {method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({values:vals})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`Append ${r.status}`);}
+  return r.json();
+}
+async function ensureSheets() {
+  const t=await getToken();
+  const meta=await(await fetch(`${BASE}/${SSID}?fields=sheets.properties`,{headers:{Authorization:`Bearer ${t}`}})).json();
+  const have=new Set((meta.sheets||[]).map(s=>s.properties.title));
+  const add=[];
+  if(!have.has(WS)) add.push({addSheet:{properties:{title:WS}}});
+  if(!have.has(CS)) add.push({addSheet:{properties:{title:CS}}});
+  if(add.length){
+    await fetch(`${BASE}/${SSID}:batchUpdate`,{method:'POST',
+      headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({requests:add})});
   }
-  return res.json();
-}
-
-async function sheetsUpdate(range, values) {
-  const tok = await getToken();
-  const res = await fetch(
-    `${SHEETS_BASE}/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
-    { method: 'PUT', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) }
-  );
-  if (!res.ok) throw new Error(`Sheets update failed: ${res.status}`);
-  return res.json();
-}
-
-let _inputSheetId = null;
-
-async function getInputSheetId() {
-  if (_inputSheetId !== null) return _inputSheetId;
-  const tok = await getToken();
-  const res = await fetch(`${SHEETS_BASE}/${SPREADSHEET_ID}?fields=sheets.properties`, { headers: { Authorization: `Bearer ${tok}` } });
-  const meta = await res.json();
-  const sheet = (meta.sheets || []).find(s => s.properties.title === SHEET_NAME);
-  if (!sheet) throw new Error('Sheet not found: ' + SHEET_NAME);
-  _inputSheetId = sheet.properties.sheetId;
-  return _inputSheetId;
-}
-
-async function sheetsDeleteRow(sheetRowNumber) {
-  const tok     = await getToken();
-  const sheetId = await getInputSheetId();
-  const res = await fetch(`${SHEETS_BASE}/${SPREADSHEET_ID}:batchUpdate`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      requests: [{ deleteDimension: { range: { sheetId, dimension: 'ROWS', startIndex: sheetRowNumber - 1, endIndex: sheetRowNumber } } }],
-    }),
-  });
-  if (!res.ok) throw new Error(`Sheets delete failed: ${res.status}`);
-  return res.json();
-}
-
-// ═══════════════════════════════════════════════════
-//  APP STATE
-// ═══════════════════════════════════════════════════
-let cachedData      = [];
-let barChartInst, pieChartInst;
-let editingSheetRow = null;
-
-// ═══════════════════════════════════════════════════
-//  CUSTOM ITEMS STORAGE (localStorage)
-// ═══════════════════════════════════════════════════
-const LS_CATS         = 'rrj_custom_cats';
-const LS_TYPES        = 'rrj_custom_types';
-const LS_HIDDEN_CATS  = 'rrj_hidden_cats';
-const LS_HIDDEN_TYPES = 'rrj_hidden_types';
-function getCustomCats()        { return JSON.parse(localStorage.getItem(LS_CATS)         || '[]'); }
-function getCustomTypes()       { return JSON.parse(localStorage.getItem(LS_TYPES)        || '[]'); }
-function saveCustomCats(arr)    { localStorage.setItem(LS_CATS,  JSON.stringify(arr)); }
-function saveCustomTypes(arr)   { localStorage.setItem(LS_TYPES, JSON.stringify(arr)); }
-function getHiddenCats()        { return JSON.parse(localStorage.getItem(LS_HIDDEN_CATS)  || '[]'); }
-function getHiddenTypes()       { return JSON.parse(localStorage.getItem(LS_HIDDEN_TYPES) || '[]'); }
-function saveHiddenCats(arr)    { localStorage.setItem(LS_HIDDEN_CATS,  JSON.stringify(arr)); }
-function saveHiddenTypes(arr)   { localStorage.setItem(LS_HIDDEN_TYPES, JSON.stringify(arr)); }
-
-const DEFAULT_TYPES = [
-  { value: 'รายรับ',           label: 'รายรับ (Income) ↑' },
-  { value: 'รายจ่าย (Debit)',  label: 'รายจ่าย – Debit ↓' },
-  { value: 'รายจ่าย (Credit)', label: 'รายจ่าย – Credit ↓' },
-];
-
-const FALLBACK_CATS = [
-  'Salary', 'Part time', 'Insurance', 'Internet & Mobile', 'Accommodation',
-  'Transportation', 'Investment', 'Food', 'Sport',
-  'Shopping', 'Debt', 'Credit Bill',
-];
-
-// ═══════════════════════════════════════════════════
-//  STARTUP
-// ═══════════════════════════════════════════════════
-window.addEventListener('load', async () => {
-  document.getElementById('txDate').valueAsDate = new Date();
-  loadCategories();
-  loadTypeOptions();
-
-  // Register service worker for PWA
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  for(const[sh,hdr]of[[WS,WS_HDR],[CS,CS_HDR]]){
+    const r=await sGet(`'${sh}'!A1:Z1`);
+    if(!r.values||!r.values[0]||r.values[0].length===0) await sPut(`'${sh}'!A1`,[hdr]);
   }
+}
 
+// ─── SETTINGS ─────────────────────────────────────
+const getSett=()=>({
+  start:  localStorage.getItem('fl_start')||'',
+  initW:  parseFloat(localStorage.getItem('fl_w')||'97.4'),
+  initBF: parseFloat(localStorage.getItem('fl_bf')||'30.6'),
+});
+const saveSett=(s,w,b)=>{
+  localStorage.setItem('fl_start',s);
+  localStorage.setItem('fl_w',w);
+  localStorage.setItem('fl_bf',b);
+};
+function getWeekPhase(forDate) {
+  const {start}=getSett();
+  if(!start) return {week:1,phase:1};
+  const s=new Date(start+'T00:00:00');
+  const d=forDate?new Date(forDate+'T00:00:00'):new Date();
+  d.setHours(0,0,0,0);
+  const days=Math.max(0,Math.floor((d-s)/86400000));
+  const week=Math.min(12,Math.max(1,Math.floor(days/7)+1));
+  return {week,phase:week<=4?1:week<=8?2:3};
+}
+
+// ─── STARTUP ──────────────────────────────────────
+let cachedLogs=[], cachedCIs=[];
+let wChartInst=null, bfChartInst=null;
+
+window.addEventListener('load',async()=>{
+  const s=getSett();
+  if(!s.start){
+    const t=new Date();
+    document.getElementById('frStart').value=isoDate(t);
+    document.getElementById('firstRunModal').classList.add('show');
+  }
+  initDates();
+  onTypeChange(defaultType());
+  renderBanner();
+  renderStrip();
+  updateHeaderSub();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
   try {
     await getToken();
-    setBadge('ok', '✅ เชื่อมต่อแล้ว');
-    await ensureHeader();
-    await loadRecentEntries(true);
-    loadDashboard(true);
-  } catch (e) {
-    setBadge('err', '❌ เชื่อมต่อไม่ได้');
-    showToast('เชื่อมต่อ Google Sheets ไม่สำเร็จ: ' + e.message, 'error');
-    console.error(e);
+    setBadge('ok','✅ เชื่อมต่อแล้ว');
+    await ensureSheets();
+    await Promise.all([loadLogs(true),loadCheckins(true)]);
+  } catch(e) {
+    setBadge('err','❌ ไม่สำเร็จ');
+    toast('เชื่อมต่อ Sheets ไม่ได้: '+e.message,'error');
   }
 });
 
-function setBadge(type, text) {
-  const b = document.getElementById('connBadge');
-  b.textContent = text;
-  b.className = `conn-badge ${type}`;
+function isoDate(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function initDates(){
+  const s=isoDate(new Date());
+  document.getElementById('logDate').value=s;
+  document.getElementById('ciDate').value=s;
+  updateCiWeek(s);
+}
+function updateCiWeek(v){if(!v)return;const{week}=getWeekPhase(v);document.getElementById('ciWeek').value=week;}
+function setBadge(type,text){const b=document.getElementById('connBadge');b.textContent=text;b.className=`conn-badge ${type}`;}
+function updateHeaderSub(){
+  const{week,phase}=getWeekPhase();
+  const s=getSett();
+  document.getElementById('headerSub').textContent=s.start
+    ?`Phase ${phase} · สัปดาห์ที่ ${week}/12`
+    :'กรุณาตั้งค่าวันเริ่มโปรแกรม';
 }
 
-// ═══════════════════════════════════════════════════
-//  CATEGORIES & HEADER
-// ═══════════════════════════════════════════════════
-async function ensureHeader() {
-  try {
-    const r = await sheetsGet(`'${SHEET_NAME}'!A1:E1`);
-    if (!r.values || r.values[0]?.length === 0) {
-      await sheetsUpdate(`'${SHEET_NAME}'!A1:E1`, [['Date','Type','Category','Amount','Note']]);
-    }
-  } catch (_) {}
+// ─── BANNER & STRIP ───────────────────────────────
+function defaultType(){
+  const k=DAY_SCH[new Date().getDay()];
+  return(k==='A'||k==='B'||k==='C')?'Bodyweight '+k:k;
 }
-
-function loadCategories() {
-  const sel    = document.getElementById('txCategory');
-  const prev   = sel.value;
-  const hidden = getHiddenCats();
-  const cats   = [...FALLBACK_CATS.filter(c => !hidden.includes(c)), ...getCustomCats()];
-  sel.innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
-  cats.forEach(c => {
-    const o = document.createElement('option');
-    o.value = c; o.textContent = c;
-    sel.appendChild(o);
-  });
-  if (prev) sel.value = prev;
-}
-
-function loadTypeOptions() {
-  const sel    = document.getElementById('txType');
-  const prev   = sel.value;
-  const hidden = getHiddenTypes();
-  sel.innerHTML = '';
-  [...DEFAULT_TYPES.filter(t => !hidden.includes(t.value)), ...getCustomTypes().map(t => ({ value: t, label: t }))].forEach(t => {
-    const o = document.createElement('option');
-    o.value = t.value; o.textContent = t.label;
-    sel.appendChild(o);
-  });
-  sel.value = prev || 'รายจ่าย (Debit)';
-  if (!sel.value) sel.value = sel.options[0]?.value || '';
-}
-
-// ═══════════════════════════════════════════════════
-//  ENTRY FORM
-// ═══════════════════════════════════════════════════
-function onTypeChange(val) {
-  const amtEl = document.getElementById('txAmount');
-  amtEl.style.borderColor = val === TYPE_INCOME ? '#10b981' : '#ef4444';
-}
-
-async function submitEntry() {
-  const date     = document.getElementById('txDate').value;
-  const txType   = document.getElementById('txType').value;
-  const category = document.getElementById('txCategory').value;
-  const amount   = document.getElementById('txAmount').value;
-  const note     = document.getElementById('txNote').value.trim();
-
-  if (!date)                              { showToast('กรุณาเลือกวันที่', 'error'); return; }
-  if (!category)                          { showToast('กรุณาเลือกหมวดหมู่', 'error'); return; }
-  if (!amount || parseFloat(amount) <= 0) { showToast('กรุณากรอกจำนวนเงิน', 'error'); return; }
-
-  const [y, m, d] = date.split('-');
-  const dateFormatted = `${parseInt(d)}/${parseInt(m)}/${y}`;
-  const rowValues = [dateFormatted, txType, category, `฿${parseFloat(amount).toFixed(2)}`, note];
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
-
-  try {
-    if (editingSheetRow !== null) {
-      await sheetsUpdate(`'${SHEET_NAME}'!A${editingSheetRow}:E${editingSheetRow}`, [rowValues]);
-      showToast('✅ แก้ไขสำเร็จ!', 'success');
-      cancelEdit();
-    } else {
-      await sheetsAppend(`'${SHEET_NAME}'!A:E`, [rowValues]);
-      showToast('✅ บันทึกสำเร็จ!', 'success');
-      document.getElementById('txAmount').value = '';
-      document.getElementById('txNote').value   = '';
-      document.getElementById('txDate').valueAsDate = new Date();
-    }
-    cachedData = [];
-    await loadRecentEntries(true);
-    loadDashboard(true);
-  } catch (e) {
-    showToast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = (editingSheetRow !== null) ? '💾 บันทึกการแก้ไข' : 'บันทึกรายการ';
+function renderBanner(){
+  const wrap=document.getElementById('wbWrap');
+  const dow=new Date().getDay(); const k=DAY_SCH[dow];
+  const{week,phase}=getWeekPhase(); const dn=DAY_LG[dow];
+  if(k==='Rest'){
+    wrap.innerHTML=`<div class="workout-banner" style="background:linear-gradient(135deg,#64748b,#475569)">
+      <div class="wb-header"><div><div class="wb-title">😴 วันพัก – ${dn}</div><div class="wb-sub">ยืดเหยียด / พักผ่อน</div></div><div class="wb-phase">Week ${week}</div></div>
+      <div class="wb-rest-msg">💤 โฟกัสที่อาหารและการนอนหลับวันนี้</div></div>`;return;
   }
-}
-
-function editRow(sheetRow, encodedJson) {
-  const [date, type, cat, amount, note] = JSON.parse(encodedJson);
-
-  let dateVal = '';
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(date)) {
-    const [dd, mm, yyyy] = date.split('/');
-    dateVal = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-  } else {
-    dateVal = date;
+  if(k==='Walking'){
+    wrap.innerHTML=`<div class="workout-banner" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+      <div class="wb-header"><div><div class="wb-title">🚶 เดิน/Active Recovery – ${dn}</div><div class="wb-sub">เป้า 8,000–10,000 ก้าว</div></div><div class="wb-phase">Week ${week}</div></div>
+      <div class="wb-rest-msg">👟 เดินหรือทำกิจกรรมเบาๆ อย่ากินหลุดวันเสาร์!</div></div>`;return;
   }
-
-  document.getElementById('txDate').value     = dateVal;
-  document.getElementById('txType').value     = type;
-  document.getElementById('txCategory').value = cat;
-  document.getElementById('txAmount').value   = parseAmount(amount);
-  document.getElementById('txNote').value     = note;
-  onTypeChange(type);
-
-  editingSheetRow = sheetRow;
-  document.getElementById('formTitle').textContent   = '✏️ แก้ไขรายการ';
-  document.getElementById('editBanner').classList.add('show');
-  document.getElementById('editRowLabel').textContent = sheetRow;
-  document.getElementById('submitBtn').innerHTML      = '💾 บันทึกการแก้ไข';
-  document.getElementById('cancelBtn').style.display = 'block';
-
-  switchPage('entry');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function cancelEdit() {
-  editingSheetRow = null;
-  document.getElementById('formTitle').textContent    = '📋 บันทึกรายการใหม่';
-  document.getElementById('editBanner').classList.remove('show');
-  document.getElementById('submitBtn').innerHTML      = 'บันทึกรายการ';
-  document.getElementById('cancelBtn').style.display = 'none';
-  document.getElementById('txDate').valueAsDate = new Date();
-  document.getElementById('txType').value       = TYPE_DEBIT;
-  document.getElementById('txCategory').value  = '';
-  document.getElementById('txAmount').value     = '';
-  document.getElementById('txNote').value       = '';
-  onTypeChange(TYPE_DEBIT);
-}
-
-async function deleteRow(sheetRow, label) {
-  if (!confirm(`ยืนยันลบรายการวันที่ ${label} ?`)) return;
-  try {
-    await sheetsDeleteRow(sheetRow);
-    showToast('🗑️ ลบรายการสำเร็จ', 'success');
-    cachedData = [];
-    await loadRecentEntries(true);
-    loadDashboard(true);
-  } catch (e) {
-    showToast('ลบไม่สำเร็จ: ' + e.message, 'error');
+  if(k==='Pickleball'){
+    wrap.innerHTML=`<div class="workout-banner" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+      <div class="wb-header"><div><div class="wb-title">🏓 พิกเคิลบอล – ${dn}</div><div class="wb-sub">คาร์ดิโอหลัก – 3 ชั่วโมง</div></div><div class="wb-phase">Week ${week}</div></div>
+      <div class="wb-rest-msg">🔥 วันเผาผลาญหลัก – เล่นสนุกและหักโหมได้!</div></div>`;return;
   }
+  const p=PROG[phase][k];
+  const sub=p.circ?`Circuit ${p.rnd} รอบ · ${p.rest}`:`${p.ex[0].s} เซต · พัก ${p.rest}`;
+  const exH=p.ex.map(e=>`<div class="ex-item"><span class="ex-name">${e.n}</span><span class="ex-target">${p.circ?e.t+' ครั้ง':e.s+' × '+e.t}</span></div>`).join('');
+  wrap.innerHTML=`<div class="workout-banner" style="background:linear-gradient(135deg,#16a34a,#059669)">
+    <div class="wb-header"><div><div class="wb-title">💪 Bodyweight ${k} – ${dn}</div><div class="wb-sub">Phase ${phase} · ${sub}</div></div><div class="wb-phase">Week ${week}</div></div>
+    <div class="ex-list">${exH}</div>
+    <div class="wb-cardio"><span style="opacity:.8">🏃 คาร์ดิโอ: </span>${p.cardio}</div></div>`;
 }
 
-// ═══════════════════════════════════════════════════
-//  DATA
-// ═══════════════════════════════════════════════════
-async function fetchAllData(force = false) {
-  if (cachedData.length > 0 && !force) return cachedData;
-  try {
-    const r = await sheetsGet(`'${SHEET_NAME}'!A2:E50000`);
-    cachedData = [];
-    (r.values || []).forEach((row, i) => {
-      if (row && row.length >= 4 && row[0] && row[3]) {
-        row._row = i + 2;
-        cachedData.push(row);
-      }
-    });
-    return cachedData;
-  } catch (e) {
-    showToast('โหลดข้อมูลไม่สำเร็จ', 'error');
-    return [];
+function renderStrip(){
+  const today=new Date(); const dow=today.getDay();
+  const mon=new Date(today); mon.setDate(today.getDate()-((dow+6)%7));
+  const logDates=new Set(cachedLogs.map(r=>r[0]));
+  const order=[1,2,3,4,5,6,0];
+  document.getElementById('weekStrip').innerHTML=order.map(d=>{
+    const dt=new Date(mon); dt.setDate(mon.getDate()+((d+6)%7));
+    const isToday=dt.toDateString()===today.toDateString();
+    const isPast=dt<today&&!isToday;
+    const k=DAY_SCH[d];
+    const logged=logDates.has(fmtDateStr(dt));
+    const icon=k==='Pickleball'?'🏓':k==='Walking'?'🚶':k==='Rest'?'😴':'💪';
+    const shortK=k==='Pickleball'?'บอล':k==='Walking'?'เดิน':k==='Rest'?'พัก':k;
+    let cls='ws-day';
+    if(k==='Rest') cls+=' resting';
+    if(isToday) cls+=' today';
+    else if(logged&&isPast) cls+=' logged';
+    else if(!logged&&isPast&&k!=='Rest') cls+=' missed';
+    return`<div class="${cls}"><span class="ws-lbl">${DAY_SH[d]}</span><span class="ws-icon">${icon}</span><span class="ws-type">${shortK}</span></div>`;
+  }).join('');
+}
+
+// ─── LOG FORM ─────────────────────────────────────
+function onTypeChange(type){
+  document.getElementById('logType').value=type;
+  const isBW=type.startsWith('Bodyweight');
+  const isPB=type==='Pickleball';
+  const isWk=type==='Walking';
+  document.getElementById('bwGroup').style.display=isBW?'':'none';
+  document.getElementById('pbGroup').style.display=isPB?'':'none';
+  document.getElementById('walkGroup').style.display=isWk?'':'none';
+}
+
+async function submitLog(){
+  const date=document.getElementById('logDate').value;
+  const type=document.getElementById('logType').value;
+  if(!date){toast('กรุณาเลือกวันที่','error');return;}
+  const[y,m,d]=date.split('-');
+  const df=`${+d}/${+m}/${y}`;
+  const isBW=type.startsWith('Bodyweight');
+  const row=[
+    df,type,
+    isBW?(document.getElementById('logPushups').value||''):'',
+    isBW?(document.getElementById('logSquats').value||''):'',
+    isBW?(document.getElementById('logPlank').value||''):'',
+    isBW?(document.getElementById('logAbsRoll').value||''):'',
+    isBW?document.getElementById('logCardioType').value:(type==='Pickleball'?'พิกเคิลบอล':type==='Walking'?'เดิน':''),
+    isBW?(document.getElementById('logCardioMin').value||''):
+      type==='Pickleball'?(document.getElementById('logPbMin').value||'180'):
+      (document.getElementById('logWalkMin').value||''),
+    document.getElementById('logCal').value||'',
+    document.getElementById('logProt').value||'',
+    document.getElementById('logWater').value||'',
+    document.getElementById('logNote').value.trim(),
+  ];
+  const btn=document.getElementById('logBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> บันทึก...';
+  try{
+    await sAppend(WS,[row]);
+    toast('✅ บันทึกสำเร็จ!','success');
+    clearLogForm();
+    await loadLogs(true);
+    renderStrip();
+  }catch(e){toast('บันทึกไม่สำเร็จ: '+e.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='💾 บันทึกวันนี้';}
+}
+
+function clearLogForm(){
+  ['logPushups','logSquats','logPlank','logAbsRoll','logCardioMin',
+   'logPbMin','logSteps','logWalkMin','logCal','logProt','logWater','logNote'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('logPbMin').value='180';
+  initDates();
+}
+
+// ─── CHECK-IN FORM ────────────────────────────────
+async function submitCheckin(){
+  const date=document.getElementById('ciDate').value;
+  const week=document.getElementById('ciWeek').value;
+  const weight=document.getElementById('ciWeight').value;
+  if(!date){toast('กรุณาเลือกวันที่','error');return;}
+  if(!weight){toast('กรุณากรอกน้ำหนัก','error');return;}
+  const[y,m,d]=date.split('-');
+  const row=[
+    `${+d}/${+m}/${y}`,week,weight,
+    document.getElementById('ciBF').value,
+    document.getElementById('ciWaist').value,
+    document.getElementById('ciPushups').value,
+    document.getElementById('ciPlank').value,
+    document.getElementById('ciAbsRoll').value,
+    document.getElementById('ciEnergy').value,
+    document.getElementById('ciSleep').value,
+    document.getElementById('ciNote').value.trim(),
+  ];
+  const btn=document.getElementById('ciBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> บันทึก...';
+  try{
+    await sAppend(CS,[row]);
+    toast('✅ Check-in สำเร็จ!','success');
+    clearCiForm();
+    await loadCheckins(true);
+    if(document.getElementById('progressPage').classList.contains('active')) renderProgress();
+  }catch(e){toast('บันทึกไม่สำเร็จ: '+e.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='💾 บันทึก Check-in';}
+}
+
+function clearCiForm(){
+  ['ciBF','ciWaist','ciPushups','ciPlank','ciAbsRoll','ciEnergy','ciSleep','ciNote','ciWeight'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';});
+  initDates();
+}
+
+// ─── DATA LOADERS ─────────────────────────────────
+async function loadLogs(){
+  try{const r=await sGet(`'${WS}'!A2:L5000`);cachedLogs=(r.values||[]).filter(x=>x&&x[0]&&x[1]);}
+  catch(e){console.error(e);}
+  renderLogList();renderStrip();
+}
+async function loadCheckins(){
+  try{const r=await sGet(`'${CS}'!A2:K5000`);cachedCIs=(r.values||[]).filter(x=>x&&x[0]);}
+  catch(e){console.error(e);}
+  renderCiList();
+}
+
+// ─── RENDER LISTS ─────────────────────────────────
+function renderLogList(){
+  const el=document.getElementById('logList');
+  if(!cachedLogs.length){el.innerHTML='<div class="empty-state">ยังไม่มีบันทึก — เริ่มบันทึกรายการแรกได้เลย!</div>';return;}
+  const rows=[...cachedLogs].sort((a,b)=>dpv(b[0])-dpv(a[0])).slice(0,14);
+  el.innerHTML='<div class="log-list">'+rows.map(r=>{
+    const type=r[1]||'';
+    const cls=type==='Pickleball'||type==='Walking'?'cardio':type==='Rest'?'rest':'';
+    const chips=[];
+    if(r[2]) chips.push(`<span class="chip green">วิดพื้น ${r[2]} ครั้ง</span>`);
+    if(r[4]) chips.push(`<span class="chip green">แพลงก์ ${r[4]} วิ</span>`);
+    if(r[6]&&r[7]&&r[6]!=='ไม่ได้ทำ') chips.push(`<span class="chip green">${r[6]} ${r[7]} นาที</span>`);
+    if(r[8]) chips.push(`<span class="chip amber">${r[8]} kcal</span>`);
+    if(r[9]) chips.push(`<span class="chip blue">โปรตีน ${r[9]}g</span>`);
+    if(r[10]) chips.push(`<span class="chip blue">น้ำ ${r[10]}L</span>`);
+    if(r[11]) chips.push(`<span class="chip gray">${r[11]}</span>`);
+    return`<div class="log-card ${cls}">
+      <div class="log-top"><span class="log-type-lbl">${typeIco(type)} ${type}</span><span class="log-date-lbl">${fmtD(r[0])}</span></div>
+      <div class="log-chips">${chips.join('')}</div></div>`;
+  }).join('')+'</div>';
+}
+
+function renderCiList(){
+  const el=document.getElementById('ciList');
+  if(!cachedCIs.length){el.innerHTML='<div class="empty-state">ยังไม่มี Check-in — ชั่งน้ำหนักแล้วบันทึกได้เลย!</div>';return;}
+  el.innerHTML=[...cachedCIs].sort((a,b)=>dpv(b[0])-dpv(a[0])).map(r=>{
+    const chips=[];
+    if(r[2]) chips.push(`<span class="chip green">⚖️ ${r[2]} กก.</span>`);
+    if(r[3]) chips.push(`<span class="chip amber">🔥 ${r[3]}%</span>`);
+    if(r[4]) chips.push(`<span class="chip blue">📏 ${r[4]} ซม.</span>`);
+    if(r[5]) chips.push(`<span class="chip green">วิดพื้น ${r[5]}</span>`);
+    if(r[6]) chips.push(`<span class="chip green">แพลงก์ ${r[6]} วิ</span>`);
+    if(r[7]) chips.push(`<span class="chip green">Abs ${r[7]}</span>`);
+    if(r[8]) chips.push(`<span class="chip" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0">พลังงาน ${r[8]}/5</span>`);
+    return`<div class="ci-card">
+      <div class="ci-top"><span class="ci-week">สัปดาห์ที่ ${r[1]||'?'}</span><span class="ci-date">${fmtD(r[0])}</span></div>
+      <div class="log-chips">${chips.join('')}</div>
+      ${r[10]?`<div style="font-size:.73rem;color:#64748b;margin-top:5px">${r[10]}</div>`:''}</div>`;
+  }).join('');
+}
+
+// ─── PROGRESS ─────────────────────────────────────
+function renderProgress(){
+  const s=getSett();
+  const sorted=[...cachedCIs].sort((a,b)=>dpv(a[0])-dpv(b[0]));
+  const lat=sorted[sorted.length-1]||null;
+  const latW=lat?parseFloat(lat[2])||0:0;
+  const latBF=lat?parseFloat(lat[3])||0:0;
+  const{week,phase}=getWeekPhase();
+
+  // Stats
+  document.getElementById('statWk').textContent=week;
+  document.getElementById('statWkd').textContent=`Phase ${phase} · จาก 12 สัปดาห์`;
+  if(latW){
+    const d=latW-s.initW;
+    document.getElementById('statW').textContent=latW.toFixed(1)+' กก.';
+    document.getElementById('statWd').className='stat-diff '+(d<0?'good':'bad');
+    document.getElementById('statWd').textContent=(d<0?'↓':'↑')+Math.abs(d).toFixed(1)+' กก. จากเริ่ม';
+  }else{
+    document.getElementById('statW').textContent=s.initW.toFixed(1)+' กก.';
+    document.getElementById('statWd').className='stat-diff neutral';
+    document.getElementById('statWd').textContent='ยังไม่มี Check-in';
   }
-}
-
-async function loadRecentEntries(force = false) {
-  await fetchAllData(force);
-  renderRecentList();
-}
-
-function filterRecent() { renderRecentList(); }
-
-function clearRecentFilter() {
-  const f = document.getElementById('recentDateFrom');
-  const t = document.getElementById('recentDateTo');
-  const s = document.getElementById('searchRecent');
-  if (f) f.value = '';
-  if (t) t.value = '';
-  if (s) s.value = '';
-  renderRecentList();
-}
-
-function clearDashDateFilter() {
-  const f = document.getElementById('filterDateFrom');
-  const t = document.getElementById('filterDateTo');
-  const s = document.getElementById('searchAll');
-  if (f) f.value = '';
-  if (t) t.value = '';
-  if (s) s.value = '';
-  highlightActiveFilters();
-  renderDashboard();
-}
-
-function renderRecentList() {
-  const q        = (document.getElementById('searchRecent')?.value || '').toLowerCase().trim();
-  const dateFrom = document.getElementById('recentDateFrom')?.value || '';
-  const dateTo   = document.getElementById('recentDateTo')?.value   || '';
-  const el       = document.getElementById('recentList');
-
-  if (cachedData.length === 0) {
-    el.innerHTML = '<div class="empty-state">ยังไม่มีรายการ — เริ่มบันทึกรายการแรกได้เลย!</div>';
-    return;
-  }
-
-  const hasDateFilter = dateFrom || dateTo;
-  const fromDate = dateFrom ? new Date(dateFrom + 'T00:00:00') : null;
-  const toDate   = dateTo   ? new Date(dateTo   + 'T23:59:59') : null;
-
-  let rows = [...cachedData].sort((a, b) => (parseDate(b[0])||0) - (parseDate(a[0])||0));
-
-  if (hasDateFilter) {
-    rows = rows.filter(r => {
-      const d = parseDate(r[0]);
-      if (!d) return false;
-      if (fromDate && d < fromDate) return false;
-      if (toDate   && d > toDate)   return false;
-      return true;
-    });
-  } else {
-    rows = rows.slice(0, 15);
-  }
-
-  if (q) rows = rows.filter(r => (r[4]||'').toLowerCase().includes(q));
-
-  if (rows.length === 0) {
-    el.innerHTML = hasDateFilter
-      ? `<div class="empty-state">ไม่พบรายการในช่วงวันที่ที่เลือก</div>`
-      : `<div class="empty-state">ไม่พบหมายเหตุที่มีคำว่า "${q}"</div>`;
-    return;
-  }
-
-  const countLabel = hasDateFilter
-    ? `<div style="font-size:.75rem;color:#64748b;margin-bottom:8px">พบ <strong>${rows.length}</strong> รายการ</div>`
-    : '';
-  el.innerHTML = countLabel + rows.map(r => rowHtml(r, true)).join('');
-}
-
-// ═══════════════════════════════════════════════════
-//  DASHBOARD FILTERS
-// ═══════════════════════════════════════════════════
-let _dashInitialized = false;
-
-function getFilters() {
-  return {
-    year:     document.getElementById('filterYear')?.value     || '',
-    month:    document.getElementById('filterMonth')?.value    || '',
-    type:     document.getElementById('filterType')?.value     || '',
-    category: document.getElementById('filterCategory')?.value || '',
-    dateFrom: document.getElementById('filterDateFrom')?.value || '',
-    dateTo:   document.getElementById('filterDateTo')?.value   || '',
-  };
-}
-
-function populateYearFilter(data) {
-  const sel = document.getElementById('filterYear');
-  const prev = sel.value;
-  const years = [...new Set(data.map(r => {
-    const d = parseDate(r[0]);
-    return d ? d.getFullYear() : null;
-  }).filter(Boolean))].sort((a, b) => b - a);
-  sel.innerHTML = '<option value="">ทุกปี</option>';
-  years.forEach(y => {
-    const o = document.createElement('option');
-    o.value = y; o.textContent = y;
-    sel.appendChild(o);
-  });
-  if (prev) sel.value = prev;
-}
-
-function populateCategoryFilter() {
-  const sel    = document.getElementById('filterCategory');
-  if (!sel) return;
-  const prev   = sel.value;
-  const hidden = getHiddenCats();
-  sel.innerHTML = '<option value="">ทุกหมวดหมู่</option>';
-  [...FALLBACK_CATS.filter(c => !hidden.includes(c)), ...getCustomCats()].forEach(c => {
-    const o = document.createElement('option');
-    o.value = c; o.textContent = c;
-    sel.appendChild(o);
-  });
-  if (prev) sel.value = prev;
-}
-
-function populateTypeFilter() {
-  const sel    = document.getElementById('filterType');
-  if (!sel) return;
-  const prev   = sel.value;
-  const hidden = getHiddenTypes();
-  sel.innerHTML = '<option value="">ทุกประเภท</option>';
-  [...DEFAULT_TYPES.filter(t => !hidden.includes(t.value)), ...getCustomTypes().map(t => ({ value: t, label: t }))].forEach(t => {
-    const o = document.createElement('option');
-    o.value = t.value; o.textContent = t.label;
-    sel.appendChild(o);
-  });
-  if (prev) sel.value = prev;
-}
-
-function highlightActiveFilters() {
-  ['filterYear','filterMonth','filterType','filterCategory','filterDateFrom','filterDateTo'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('active-filter', !!el.value);
-  });
-}
-
-function applyFilters() {
-  document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
-  highlightActiveFilters();
-  renderDashboard();
-}
-
-function resetFilters() {
-  document.getElementById('filterYear').value     = '';
-  document.getElementById('filterMonth').value    = '';
-  document.getElementById('filterType').value     = '';
-  document.getElementById('filterCategory').value = '';
-  document.getElementById('filterDateFrom').value = '';
-  document.getElementById('filterDateTo').value   = '';
-  document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
-  document.querySelector('.p-pill[data-period="all"]').classList.add('active');
-  highlightActiveFilters();
-  renderDashboard();
-}
-
-// ═══════════════════════════════════════════════════
-//  DASHBOARD
-// ═══════════════════════════════════════════════════
-function setPeriod(btn) {
-  document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const now = new Date();
-  const period = btn.dataset.period;
-  if (period === 'month') {
-    document.getElementById('filterYear').value  = now.getFullYear();
-    document.getElementById('filterMonth').value = now.getMonth() + 1;
-  } else if (period === 'year') {
-    document.getElementById('filterYear').value  = now.getFullYear();
-    document.getElementById('filterMonth').value = '';
-  } else {
-    document.getElementById('filterYear').value  = '';
-    document.getElementById('filterMonth').value = '';
-  }
-  document.getElementById('filterType').value     = '';
-  document.getElementById('filterCategory').value = '';
-  document.getElementById('filterDateFrom').value = '';
-  document.getElementById('filterDateTo').value   = '';
-  highlightActiveFilters();
-  renderDashboard();
-}
-
-async function loadDashboard(force = false) {
-  const data = await fetchAllData(force);
-  populateYearFilter(data);
-  if (!_dashInitialized) {
-    _dashInitialized = true;
-    populateCategoryFilter();
-    populateTypeFilter();
-    const now = new Date();
-    document.getElementById('filterYear').value  = now.getFullYear();
-    document.getElementById('filterMonth').value = now.getMonth() + 1;
-    highlightActiveFilters();
-  }
-  renderDashboard();
-}
-
-function renderDashboard() {
-  const data = cachedData;
-  const f    = getFilters();
-  const q    = (document.getElementById('searchAll')?.value || '').toLowerCase().trim();
-
-  const fromDate = f.dateFrom ? new Date(f.dateFrom + 'T00:00:00') : null;
-  const toDate   = f.dateTo   ? new Date(f.dateTo   + 'T23:59:59') : null;
-
-  let filtered = data.filter(r => {
-    const d = parseDate(r[0]);
-    if (!d || isNaN(d)) return false;
-    if (f.year     && d.getFullYear()  !== parseInt(f.year))  return false;
-    if (f.month    && d.getMonth() + 1 !== parseInt(f.month)) return false;
-    if (f.type     && r[1] !== f.type)     return false;
-    if (f.category && r[2] !== f.category) return false;
-    if (fromDate   && d < fromDate) return false;
-    if (toDate     && d > toDate)   return false;
-    return true;
-  });
-
-  // Search applies to everything — charts, summary, and list
-  if (q) filtered = filtered.filter(r => (r[4] || '').toLowerCase().includes(q));
-
-  const incRows = filtered.filter(r => (r[1] || '').includes('รายรับ'));
-  const expRows = filtered.filter(r => (r[1] || '').includes('รายจ่าย'));
-  const income  = incRows.reduce((s, r) => s + parseAmount(r[3]), 0);
-  const expense = expRows.reduce((s, r) => s + parseAmount(r[3]), 0);
-  const balance = income - expense;
-
-  document.getElementById('sumIncome').textContent       = fmt(income);
-  document.getElementById('sumIncomeCount').textContent  = incRows.length + ' รายการ';
-  document.getElementById('sumExpense').textContent      = fmt(expense);
-  document.getElementById('sumExpenseCount').textContent = expRows.length + ' รายการ';
-  document.getElementById('sumBalance').textContent      = fmt(Math.abs(balance));
-  document.getElementById('sumBalance').style.color      = balance >= 0 ? '#10b981' : '#ef4444';
-  document.getElementById('sumBalanceSub').textContent   = balance >= 0 ? '✅ บวก' : '⚠️ ติดลบ';
-
-  renderBarChart(filtered);
-  renderPieChart(filtered);
-  renderAllTable(filtered, q);
-}
-
-function renderBarChart(filtered) {
-  const income  = filtered.filter(r => (r[1]||'').includes('รายรับ')).reduce((s,r) => s + parseAmount(r[3]), 0);
-  const expense = filtered.filter(r => (r[1]||'').includes('รายจ่าย')).reduce((s,r) => s + parseAmount(r[3]), 0);
-  if (barChartInst) barChartInst.destroy();
-  barChartInst = new Chart(document.getElementById('barChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['รายรับ', 'รายจ่าย'],
-      datasets: [{
-        data: [income, expense],
-        backgroundColor: ['rgba(16,185,129,.85)', 'rgba(239,68,68,.85)'],
-        borderColor:     ['#10b981', '#ef4444'],
-        borderWidth: 2,
-        hoverOffset: 10,
-      }],
-    },
-    options: {
-      responsive: true,
-      cutout: '62%',
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14, usePointStyle: true } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)}` } },
-        datalabels: {
-          color: '#fff',
-          font: { size: 11, weight: '700' },
-          formatter: (v, ctx) => {
-            const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            if (!total || v === 0) return '';
-            const pct = Math.round(v / total * 100);
-            return pct < 5 ? '' : `${pct}%\n${fmt(v)}`;
-          },
-          textAlign: 'center',
-        },
-      },
-    },
-    plugins: [ChartDataLabels],
-  });
-}
-
-function renderPieChart(filtered) {
-  const byCat = {};
-  filtered.filter(r => (r[1]||'').includes('รายจ่าย')).forEach(r => {
-    const c = r[2] || 'Other';
-    byCat[c] = (byCat[c] || 0) + parseAmount(r[3]);
-  });
-  const COLORS  = ['#4f46e5','#ef4444','#f59e0b','#10b981','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#6b7280','#0ea5e9','#a855f7'];
-  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
-  if (pieChartInst) pieChartInst.destroy();
-
-  if (entries.length === 0) {
-    pieChartInst = new Chart(document.getElementById('pieChart'), {
-      type: 'bar',
-      data: { labels: ['ไม่มีข้อมูล'], datasets: [{ data: [0], backgroundColor: ['#e2e8f0'] }] },
-      options: { responsive: true, plugins: { datalabels: { display: false }, legend: { display: false } } },
-    });
-    return;
+  if(latBF){
+    const d=latBF-s.initBF;
+    document.getElementById('statBF').textContent=latBF.toFixed(1)+'%';
+    document.getElementById('statBFd').className='stat-diff '+(d<0?'good':'bad');
+    document.getElementById('statBFd').textContent=(d<0?'↓':'↑')+Math.abs(d).toFixed(1)+'% จากเริ่ม';
+  }else{
+    document.getElementById('statBF').textContent=s.initBF.toFixed(1)+'%';
+    document.getElementById('statBFd').className='stat-diff neutral';
+    document.getElementById('statBFd').textContent='ยังไม่มี Check-in';
   }
 
-  pieChartInst = new Chart(document.getElementById('pieChart'), {
-    type: 'bar',
-    data: {
-      labels: entries.map(e => e[0]),
-      datasets: [{
-        data:            entries.map(e => e[1]),
-        backgroundColor: entries.map((_, i) => COLORS[i % COLORS.length]),
-        borderRadius:    6,
-        borderSkipped:   false,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}` } },
-        datalabels: {
-          anchor: 'end',
-          align:  'end',
-          color:  '#374151',
-          font:   { size: 10, weight: '700' },
-          formatter: (v, ctx) => {
-            const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            const pct = total > 0 ? Math.round(v / total * 100) : 0;
-            return '฿' + Math.round(v).toLocaleString('th-TH') + '  (' + pct + '%)';
-          },
-        },
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          grid: { color: 'rgba(0,0,0,.05)' },
-          ticks: { callback: v => '฿' + (v/1000 >= 1 ? Math.round(v/1000)+'k' : v.toLocaleString('th-TH')), font: { size: 10 } },
-        },
-        y: { ticks: { font: { size: 11 } } },
-      },
-      layout: { padding: { right: 100 } },
-    },
-    plugins: [ChartDataLabels],
-  });
-}
-
-function renderAllTable(data, q = '') {
-  const el        = document.getElementById('allList');
-  const countEl   = document.getElementById('allListCount');
-  const hasDate   = !!(document.getElementById('filterDateFrom')?.value || document.getElementById('filterDateTo')?.value);
-
-  if (countEl) {
-    if (data.length > 0 && (hasDate || q)) {
-      countEl.style.display = 'block';
-      countEl.innerHTML = `พบ <strong>${data.length}</strong> รายการ`;
-    } else {
-      countEl.style.display = 'none';
-    }
-  }
-
-  if (data.length === 0) {
-    el.innerHTML = q
-      ? `<div class="empty-state">ไม่พบหมายเหตุที่มีคำว่า "${q}"</div>`
-      : '<div class="empty-state">ไม่มีข้อมูลในช่วงเวลาที่เลือก</div>';
-    return;
-  }
-  el.innerHTML = [...data].sort((a, b) => (parseDate(b[0])||0) - (parseDate(a[0])||0)).map(r => rowHtml(r, false)).join('');
-}
-
-function filterAll() { renderDashboard(); }
-
-// ═══════════════════════════════════════════════════
-//  UI HELPERS
-// ═══════════════════════════════════════════════════
-function rowHtml(r, showDup = false) {
-  const isInc     = (r[1] || '').includes('รายรับ');
-  const typeLabel = r[1] || '';
-  const sheetRow  = r._row;
-  const encoded   = encodeURIComponent(JSON.stringify([r[0], r[1], r[2], r[3], r[4] || '']));
-  const dupBtn    = showDup
-    ? `<button class="act-btn dup" data-enc="${encoded}" onclick="duplicateRow(this)">📋 ทำซ้ำ</button>`
-    : '';
-  return `<div class="rec-card ${isInc ? 'is-inc' : 'is-exp'}">
-    <div class="rec-top">
-      <div class="rec-left">
-        <span class="badge ${isInc ? 'inc' : 'exp'}">${isInc ? 'รายรับ' : typeLabel.replace('รายจ่าย ', '')}</span>
-        <span class="rec-cat">${r[2] || ''}</span>
-      </div>
-      <span class="rec-amount" style="color:${isInc ? '#10b981' : '#ef4444'}">${isInc ? '+' : '-'}${fmt(parseAmount(r[3]))}</span>
+  // Goal bars
+  const curW=latW||s.initW, curBF=latBF||s.initBF;
+  const goalW=84, goalBF=20;
+  const wPct=Math.min(100,Math.max(0,((s.initW-curW)/(s.initW-goalW))*100));
+  const bPct=Math.min(100,Math.max(0,((s.initBF-curBF)/(s.initBF-goalBF))*100));
+  document.getElementById('goalBars').innerHTML=`
+    <div class="goal-bar">
+      <div class="goal-bar-hdr"><span>น้ำหนัก: <strong>${curW.toFixed(1)} กก.</strong></span><span>เป้า: <strong>82–86 กก.</strong></span></div>
+      <div class="prog-track"><div class="prog-fill${wPct>=80?' great':''}" style="width:${wPct.toFixed(1)}%"></div></div>
+      <div class="prog-note">ลดแล้ว ${(s.initW-curW).toFixed(1)} กก. / เป้า ${(s.initW-goalW).toFixed(1)} กก. (${wPct.toFixed(0)}%)</div>
     </div>
-    <div class="rec-bottom">
-      <span class="rec-date">${fmtDate(r[0])}</span>
-      <span class="rec-note">${r[4] || ''}</span>
-      <div class="rec-btns">
-        ${dupBtn}
-        <button class="act-btn edit" onclick="editRow(${sheetRow}, decodeURIComponent('${encoded}'))">✏️ แก้ไข</button>
-        <button class="act-btn del"  onclick="deleteRow(${sheetRow}, '${r[0]}')">🗑️ ลบ</button>
-      </div>
-    </div>
-  </div>`;
-}
+    <div class="goal-bar">
+      <div class="goal-bar-hdr"><span>% ไขมัน: <strong>${curBF.toFixed(1)}%</strong></span><span>เป้า: <strong>&lt;20%</strong></span></div>
+      <div class="prog-track"><div class="prog-fill${bPct>=80?' great':''}" style="width:${bPct.toFixed(1)}%"></div></div>
+      <div class="prog-note">ลดแล้ว ${(s.initBF-curBF).toFixed(1)}% / เป้า ${(s.initBF-goalBF).toFixed(1)}% (${bPct.toFixed(0)}%)</div>
+    </div>`;
 
-// ═══════════════════════════════════════════════════
-//  MANAGEMENT MODAL (categories & types)
-// ═══════════════════════════════════════════════════
-let _mgmtMode = '';
+  // Monthly targets
+  const sd=s.start?new Date(s.start+'T00:00:00'):new Date();
+  const now=new Date();
+  const addDays=(dt,n)=>{const x=new Date(dt);x.setDate(x.getDate()+n);return x;};
+  const months=[
+    {lbl:'เดือน 1',end:addDays(sd,28),wt:'92–94 กก.',bt:'26–28%',ph:1},
+    {lbl:'เดือน 2',end:addDays(sd,56),wt:'87–90 กก.',bt:'22–25%',ph:2},
+    {lbl:'เดือน 3',end:addDays(sd,84),wt:'82–86 กก.',bt:'18–22%',ph:3},
+  ];
+  document.getElementById('targetBody').innerHTML=months.map(mo=>{
+    const done=now>mo.end;
+    const cur=!done&&week<=mo.ph*4;
+    return`<tr><td>${mo.lbl}</td><td>${mo.wt}</td><td>${mo.bt}</td>
+    <td><span class="t-badge ${done?'done':cur?'current':'future'}">${done?'✅ ผ่านแล้ว':cur?'⏳ กำลังทำ':'🔒 ยังไม่ถึง'}</span></td></tr>`;
+  }).join('');
 
-function openMgmt(mode) {
-  _mgmtMode = mode;
-  const isCat = mode === 'cat';
-  document.getElementById('mgmtTitle').textContent = isCat ? '🏷️ จัดการหมวดหมู่' : '📂 จัดการประเภท';
-  document.getElementById('mgmtNewInput').placeholder = isCat
-    ? 'เช่น Freelance, Bonus...'
-    : 'เช่น รายรับ (โบนัส) หรือ รายจ่าย (ผ่อน)...';
-  document.getElementById('mgmtHint').textContent = isCat
-    ? ''
-    : '💡 เริ่มต้นด้วย "รายรับ" หรือ "รายจ่าย" เพื่อให้ระบบจำแนกประเภทได้ถูกต้อง';
-  renderMgmtList();
-  document.getElementById('mgmtModal').classList.add('show');
-  setTimeout(() => document.getElementById('mgmtNewInput').focus(), 100);
-}
-
-function closeMgmt() {
-  document.getElementById('mgmtModal').classList.remove('show');
-  document.getElementById('mgmtNewInput').value = '';
-  _mgmtMode = '';
-}
-
-function renderMgmtList() {
-  const el      = document.getElementById('mgmtList');
-  const isCat   = _mgmtMode === 'cat';
-  const hidden  = isCat ? getHiddenCats() : getHiddenTypes();
-  const customs = isCat ? getCustomCats() : getCustomTypes();
-
-  const visibleDefaults = isCat
-    ? FALLBACK_CATS.filter(c => !hidden.includes(c)).map(c => ({ value: c, label: c }))
-    : DEFAULT_TYPES.filter(t => !hidden.includes(t.value));
-
-  const defaultsHtml = visibleDefaults.map(d =>
-    `<div class="mgmt-item mgmt-item-default">
-      <span>${d.label}</span>
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <span class="mgmt-default-badge">ค่าเริ่มต้น</span>
-        <button class="mgmt-del-btn" onclick="mgmtDeleteDefault('${d.value.replace(/'/g,"\\'")}')">✕</button>
-      </div>
-    </div>`
-  ).join('');
-
-  const customsHtml = customs.map((c, i) =>
-    `<div class="mgmt-item">
-      <span>${c}</span>
-      <button class="mgmt-del-btn" onclick="mgmtDeleteItem(${i})">✕</button>
-    </div>`
-  ).join('');
-
-  const emptyHtml = (visibleDefaults.length === 0 && customs.length === 0)
-    ? `<div style="text-align:center;color:#94a3b8;font-size:.82rem;padding:10px 0">ไม่มีรายการที่แสดง</div>`
-    : '';
-
-  const restoreHtml = hidden.length > 0
-    ? `<button onclick="mgmtRestoreDefaults()" style="width:100%;margin-top:8px;padding:7px 10px;background:#f0fdf4;border:1.5px dashed #86efac;border-radius:8px;color:#16a34a;font-size:.8rem;font-weight:700;cursor:pointer">↺ กู้คืนค่าเริ่มต้น (${hidden.length} รายการ)</button>`
-    : '';
-
-  el.innerHTML = defaultsHtml + customsHtml + emptyHtml + restoreHtml;
-}
-
-function mgmtAddItem() {
-  const input = document.getElementById('mgmtNewInput');
-  const name  = input.value.trim();
-  if (!name) return;
-
-  if (_mgmtMode === 'cat') {
-    const all = [...FALLBACK_CATS, ...getCustomCats()];
-    if (all.find(c => c.toLowerCase() === name.toLowerCase())) {
-      showToast('หมวดหมู่นี้มีอยู่แล้ว', 'error'); return;
-    }
-    const arr = getCustomCats();
-    arr.push(name);
-    saveCustomCats(arr);
-    loadCategories();
-    populateCategoryFilter();
-  } else {
-    const allDef = DEFAULT_TYPES.map(t => t.value.toLowerCase());
-    const allCus = getCustomTypes().map(t => t.toLowerCase());
-    if ([...allDef, ...allCus].includes(name.toLowerCase())) {
-      showToast('ประเภทนี้มีอยู่แล้ว', 'error'); return;
-    }
-    const arr = getCustomTypes();
-    arr.push(name);
-    saveCustomTypes(arr);
-    loadTypeOptions();
-    populateTypeFilter();
+  // Weight chart
+  if(wChartInst) wChartInst.destroy();
+  const wRows=sorted.filter(r=>r[2]&&parseFloat(r[2]));
+  if(wRows.length){
+    wChartInst=new Chart(document.getElementById('wChart'),{
+      type:'line',
+      data:{labels:wRows.map(r=>`สป.${r[1]||'?'}`),datasets:[{
+        label:'น้ำหนัก',data:wRows.map(r=>parseFloat(r[2])),
+        borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',
+        tension:.3,pointRadius:5,pointBackgroundColor:'#16a34a',fill:true,
+      }]},
+      options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'top',align:'top',color:'#15803d',font:{size:10,weight:'700'},formatter:v=>v.toFixed(1)}},
+        scales:{y:{beginAtZero:false,ticks:{callback:v=>v+' กก.',font:{size:10}}},x:{ticks:{font:{size:10}}}}},
+      plugins:[ChartDataLabels],
+    });
   }
 
-  input.value = '';
-  renderMgmtList();
-  showToast('✅ เพิ่มสำเร็จ', 'success');
-}
-
-function mgmtDeleteItem(index) {
-  if (_mgmtMode === 'cat') {
-    const arr = getCustomCats();
-    arr.splice(index, 1);
-    saveCustomCats(arr);
-    loadCategories();
-    populateCategoryFilter();
-  } else {
-    const arr = getCustomTypes();
-    arr.splice(index, 1);
-    saveCustomTypes(arr);
-    loadTypeOptions();
-    populateTypeFilter();
+  // BF chart
+  if(bfChartInst) bfChartInst.destroy();
+  const bfRows=sorted.filter(r=>r[3]&&parseFloat(r[3]));
+  document.getElementById('bfChartBox').style.display=bfRows.length?'':'none';
+  if(bfRows.length){
+    bfChartInst=new Chart(document.getElementById('bfChart'),{
+      type:'line',
+      data:{labels:bfRows.map(r=>`สป.${r[1]||'?'}`),datasets:[{
+        label:'% ไขมัน',data:bfRows.map(r=>parseFloat(r[3])),
+        borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.08)',
+        tension:.3,pointRadius:5,pointBackgroundColor:'#dc2626',fill:true,
+      }]},
+      options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'top',align:'top',color:'#dc2626',font:{size:10,weight:'700'},formatter:v=>v.toFixed(1)+'%'}},
+        scales:{y:{beginAtZero:false,ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10}}}}},
+      plugins:[ChartDataLabels],
+    });
   }
-  renderMgmtList();
-  showToast('ลบแล้ว', 'info');
+
+  // Fitness progress bars
+  const latCI=sorted[sorted.length-1]||null;
+  const cP=latCI?parseInt(latCI[5])||0:0;
+  const cPl=latCI?parseInt(latCI[6])||0:0;
+  const cA=latCI?parseInt(latCI[7])||0:0;
+  document.getElementById('fitProgress').innerHTML=[
+    {n:'วิดพื้นต่อเนื่อง',cur:cP,goal:20,u:'ครั้ง'},
+    {n:'แพลงก์',cur:cPl,goal:90,u:'วินาที'},
+    {n:'Abs Roll',cur:cA,goal:15,u:'ครั้ง'},
+  ].map(g=>{
+    const pct=g.goal?Math.min(100,Math.round(g.cur/g.goal*100)):0;
+    return`<div class="fit-item">
+      <div class="fit-hdr"><span class="fit-name">${g.n}</span>
+      <span class="fit-vals"><strong>${g.cur||'–'} ${g.u}</strong> / เป้า ${g.goal} ${g.u}</span></div>
+      <div class="prog-track"><div class="prog-fill${pct>=100?' great':''}" style="width:${pct}%"></div></div>
+      <div class="prog-note">${pct}% สู่เป้าหมาย</div></div>`;
+  }).join('');
 }
 
-function mgmtDeleteDefault(value) {
-  if (_mgmtMode === 'cat') {
-    const arr = getHiddenCats();
-    if (!arr.includes(value)) arr.push(value);
-    saveHiddenCats(arr);
-    loadCategories();
-    populateCategoryFilter();
-  } else {
-    const arr = getHiddenTypes();
-    if (!arr.includes(value)) arr.push(value);
-    saveHiddenTypes(arr);
-    loadTypeOptions();
-    populateTypeFilter();
-  }
-  renderMgmtList();
-  showToast('ซ่อนแล้ว', 'info');
+// ─── SETTINGS MODAL ───────────────────────────────
+function openSettings(){
+  const s=getSett();
+  document.getElementById('setStart').value=s.start;
+  document.getElementById('setWeight').value=s.initW;
+  document.getElementById('setBF').value=s.initBF;
+  document.getElementById('settingsModal').classList.add('show');
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
+function saveSettings(){
+  const d=document.getElementById('setStart').value;
+  if(!d){toast('กรุณาเลือกวันเริ่มโปรแกรม','error');return;}
+  saveSett(d,document.getElementById('setWeight').value,document.getElementById('setBF').value);
+  closeSettings(); updateHeaderSub(); renderBanner(); renderStrip();
+  updateCiWeek(document.getElementById('ciDate').value);
+  toast('✅ บันทึกการตั้งค่าแล้ว','success');
+}
+function saveFirstRun(){
+  const d=document.getElementById('frStart').value;
+  if(!d){toast('กรุณาเลือกวันเริ่มโปรแกรม','error');return;}
+  saveSett(d,document.getElementById('frWeight').value,document.getElementById('frBF').value);
+  document.getElementById('firstRunModal').classList.remove('show');
+  updateHeaderSub(); renderBanner(); renderStrip();
+  updateCiWeek(document.getElementById('ciDate').value);
+  toast('🚀 เริ่มโปรแกรมแล้ว! โชคดี!','success');
 }
 
-function mgmtRestoreDefaults() {
-  if (_mgmtMode === 'cat') {
-    saveHiddenCats([]);
-    loadCategories();
-    populateCategoryFilter();
-  } else {
-    saveHiddenTypes([]);
-    loadTypeOptions();
-    populateTypeFilter();
-  }
-  renderMgmtList();
-  showToast('↺ กู้คืนสำเร็จ', 'success');
+// ─── PAGE SWITCH ──────────────────────────────────
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('[data-page]').forEach(b=>b.classList.remove('active'));
+  document.getElementById(name+'Page').classList.add('active');
+  document.querySelectorAll(`[data-page="${name}"]`).forEach(b=>b.classList.add('active'));
+  if(name==='progress') renderProgress();
 }
 
-// ═══════════════════════════════════════════════════
-//  DUPLICATE
-// ═══════════════════════════════════════════════════
-let _dupData = null;
-
-function duplicateRow(btn) {
-  _dupData = JSON.parse(decodeURIComponent(btn.dataset.enc));
-  // Set today in local time (valueAsDate uses UTC which can show yesterday in UTC+7)
-  const t = new Date();
-  document.getElementById('dupDate').value =
-    `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-  const isInc = (_dupData[1]||'').includes('รายรับ');
-  document.getElementById('dupInfo').innerHTML =
-    `<strong>${_dupData[2]}</strong> &nbsp;|&nbsp; ${_dupData[1].replace('รายจ่าย ','')}<br>` +
-    `<span style="color:${isInc?'#10b981':'#ef4444'};font-weight:700">${isInc?'+':'-'}${fmt(parseAmount(_dupData[3]))}</span>` +
-    (_dupData[4] ? `&nbsp;&nbsp;<span style="color:#94a3b8">${_dupData[4]}</span>` : '');
-  document.getElementById('dupModal').classList.add('show');
+// ─── UTILS ────────────────────────────────────────
+function dpv(s){
+  if(!s)return 0;
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)){const[d,m,y]=s.split('/').map(Number);return new Date(y,m-1,d).getTime();}
+  return new Date(s).getTime()||0;
 }
-
-function closeDupModal() {
-  document.getElementById('dupModal').classList.remove('show');
-  _dupData = null;
+function fmtD(s){
+  if(!s)return'';const t=dpv(s);if(!t)return s;const d=new Date(t);
+  return`${d.getDate()} ${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}`;
 }
-
-async function confirmDuplicate() {
-  if (!_dupData) return;
-  const dateInput = document.getElementById('dupDate').value;
-  if (!dateInput) { showToast('กรุณาเลือกวันที่', 'error'); return; }
-  let [y, m, d] = dateInput.split('-').map(Number);
-  if (y > 2500) y -= 543; // convert Buddhist Era → Christian Era
-  const dateFormatted = `${d}/${m}/${y}`;
-  const amount = `฿${parseAmount(_dupData[3]).toFixed(2)}`;
-  const rowValues = [dateFormatted, _dupData[1], _dupData[2], amount, _dupData[4] || ''];
-  const btn = document.getElementById('dupSaveBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
-  try {
-    await sheetsAppend(`'${SHEET_NAME}'!A:E`, [rowValues]);
-    showToast('✅ ทำซ้ำสำเร็จ!', 'success');
-    closeDupModal();
-    cachedData = [];
-    await loadRecentEntries(true);
-    loadDashboard(true);
-  } catch (e) {
-    showToast('ทำซ้ำไม่สำเร็จ: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '💾 บันทึกสำเนา';
-  }
-}
-
-function fmt(v) {
-  return '฿' + (parseFloat(v) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function fmtDate(d) {
-  if (!d) return '';
-  try {
-    const dt = parseDate(d);
-    if (!dt || isNaN(dt)) return d;
-    return dt.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
-  } catch (_) { return d; }
-}
-
-function switchPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('[data-page]').forEach(b => b.classList.remove('active'));
-  document.getElementById(name + 'Page').classList.add('active');
-  document.querySelectorAll(`[data-page="${name}"]`).forEach(b => b.classList.add('active'));
-  if (name === 'dashboard') loadDashboard(false);
-}
-
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast ${type} show`;
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+function fmtDateStr(d){return`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;}
+function typeIco(t){return t==='Pickleball'?'🏓':t==='Walking'?'🚶':t==='Rest'?'😴':'💪';}
+function toast(msg,type='success'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=`toast ${type} show`;
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3500);
 }
 </script>
 </body>

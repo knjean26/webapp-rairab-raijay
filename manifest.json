@@ -1,11 +1,11 @@
 {
-  "name": "บันทึกรายรับ-รายจ่าย",
-  "short_name": "รายรับ-รายจ่าย",
-  "description": "แอปบันทึกรายรับและรายจ่ายส่วนตัว",
+  "name": "Fat Loss Tracker",
+  "short_name": "FatLoss",
+  "description": "ติดตามโปรแกรมลดไขมัน 12 สัปดาห์ — Bodyweight + พิกเคิลบอล",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#4f46e5",
+  "background_color": "#f0fdf4",
+  "theme_color": "#16a34a",
   "orientation": "portrait-primary",
   "lang": "th",
   "icons": [
